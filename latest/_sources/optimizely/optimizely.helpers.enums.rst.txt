@@ -1,0 +1,7 @@
+optimizely.helpers.enums module
+===============================
+
+.. automodule:: optimizely.helpers.enums
+    :members:
+    :undoc-members:
+    :show-inheritance:

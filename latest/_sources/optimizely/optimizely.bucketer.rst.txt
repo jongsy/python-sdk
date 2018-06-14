@@ -1,0 +1,7 @@
+optimizely.bucketer module
+==========================
+
+.. automodule:: optimizely.bucketer
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -1,0 +1,7 @@
+optimizely.entities module
+==========================
+
+.. automodule:: optimizely.entities
+    :members:
+    :undoc-members:
+    :show-inheritance:

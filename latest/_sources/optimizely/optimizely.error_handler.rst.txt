@@ -1,0 +1,7 @@
+optimizely.error\_handler module
+================================
+
+.. automodule:: optimizely.error_handler
+    :members:
+    :undoc-members:
+    :show-inheritance:

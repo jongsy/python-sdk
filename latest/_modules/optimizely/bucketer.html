@@ -1,0 +1,215 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>optimizely.bucketer &#8212; Optimizely Python SDK  documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for optimizely.bucketer</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2016-2017, Optimizely</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1"># http://www.apache.org/licenses/LICENSE-2.0</span>
+
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="k">try</span><span class="p">:</span>
+  <span class="kn">import</span> <span class="nn">mmh3</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+  <span class="kn">from</span> <span class="nn">.lib</span> <span class="k">import</span> <span class="n">pymmh3</span> <span class="k">as</span> <span class="n">mmh3</span>
+
+<span class="kn">from</span> <span class="nn">.helpers</span> <span class="k">import</span> <span class="n">enums</span>
+
+<span class="n">MAX_TRAFFIC_VALUE</span> <span class="o">=</span> <span class="mi">10000</span>
+<span class="n">UNSIGNED_MAX_32_BIT_VALUE</span> <span class="o">=</span> <span class="mh">0xFFFFFFFF</span>
+<span class="n">MAX_HASH_VALUE</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+<span class="n">HASH_SEED</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">BUCKETING_ID_TEMPLATE</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{bucketing_id}{parent_id}</span><span class="s1">&#39;</span>
+<span class="n">GROUP_POLICIES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;random&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="Bucketer"><a class="viewcode-back" href="../../optimizely/optimizely.bucketer.html#optimizely.bucketer.Bucketer">[docs]</a><span class="k">class</span> <span class="nc">Bucketer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot; Optimizely bucketing algorithm that evenly distributes visitors. &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_config</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Bucketer init method to set bucketing seed and project config data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      project_config: Project config data to be used in making bucketing decisions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">bucket_seed</span> <span class="o">=</span> <span class="n">HASH_SEED</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">project_config</span>
+
+  <span class="k">def</span> <span class="nf">_generate_unsigned_hash_code_32_bit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucketing_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to retrieve hash code.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      bucketing_id: ID for bucketing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Hash code which is a 32 bit unsigned integer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Adjusting MurmurHash code to be unsigned</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">mmh3</span><span class="o">.</span><span class="n">hash</span><span class="p">(</span><span class="n">bucketing_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket_seed</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">UNSIGNED_MAX_32_BIT_VALUE</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_generate_bucket_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucketing_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Helper function to generate bucket value in half-closed interval [0, MAX_TRAFFIC_VALUE).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      bucketing_id: ID for bucketing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Bucket value corresponding to the provided bucketing ID.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ratio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_generate_unsigned_hash_code_32_bit</span><span class="p">(</span><span class="n">bucketing_id</span><span class="p">))</span> <span class="o">/</span> <span class="n">MAX_HASH_VALUE</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">ratio</span> <span class="o">*</span> <span class="n">MAX_TRAFFIC_VALUE</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Bucketer.find_bucket"><a class="viewcode-back" href="../../optimizely/optimizely.bucketer.html#optimizely.bucketer.Bucketer.find_bucket">[docs]</a>  <span class="k">def</span> <span class="nf">find_bucket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucketing_id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">traffic_allocations</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Determine entity based on bucket value and traffic allocations.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      bucketing_id: ID to be used for bucketing the user.</span>
+<span class="sd">      parent_id: ID representing group or experiment.</span>
+<span class="sd">      traffic_allocations: Traffic allocations representing traffic allotted to experiments or variations.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Entity ID which may represent experiment or variation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bucketing_key</span> <span class="o">=</span> <span class="n">BUCKETING_ID_TEMPLATE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bucketing_id</span><span class="o">=</span><span class="n">bucketing_id</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="n">parent_id</span><span class="p">)</span>
+    <span class="n">bucketing_number</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_bucket_value</span><span class="p">(</span><span class="n">bucketing_key</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                           <span class="s1">&#39;Assigned bucket </span><span class="si">%s</span><span class="s1"> to user with bucketing ID &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">bucketing_number</span><span class="p">,</span>
+                                                                                   <span class="n">bucketing_id</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">traffic_allocation</span> <span class="ow">in</span> <span class="n">traffic_allocations</span><span class="p">:</span>
+      <span class="n">current_end_of_range</span> <span class="o">=</span> <span class="n">traffic_allocation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;endOfRange&#39;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">bucketing_number</span> <span class="o">&lt;</span> <span class="n">current_end_of_range</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">traffic_allocation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;entityId&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Bucketer.bucket"><a class="viewcode-back" href="../../optimizely/optimizely.bucketer.html#optimizely.bucketer.Bucketer.bucket">[docs]</a>  <span class="k">def</span> <span class="nf">bucket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">bucketing_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; For a given experiment and bucketing ID determines variation to be shown to user.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      experiment: Object representing the experiment for which user is to be bucketed.</span>
+<span class="sd">      user_id: ID for user.</span>
+<span class="sd">      bucketing_id: ID to be used for bucketing the user.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Variation in which user with ID user_id will be put in. None if no variation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">experiment</span><span class="p">:</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># Determine if experiment is in a mutually exclusive group</span>
+    <span class="k">if</span> <span class="n">experiment</span><span class="o">.</span><span class="n">groupPolicy</span> <span class="ow">in</span> <span class="n">GROUP_POLICIES</span><span class="p">:</span>
+      <span class="n">group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_group</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">groupId</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">group</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+      <span class="n">user_experiment_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_bucket</span><span class="p">(</span><span class="n">bucketing_id</span><span class="p">,</span> <span class="n">experiment</span><span class="o">.</span><span class="n">groupId</span><span class="p">,</span> <span class="n">group</span><span class="o">.</span><span class="n">trafficAllocation</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">user_experiment_id</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s1">&#39;User &quot;</span><span class="si">%s</span><span class="s1">&quot; is in no experiment.&#39;</span> <span class="o">%</span> <span class="n">user_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+      <span class="k">if</span> <span class="n">user_experiment_id</span> <span class="o">!=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s1">&#39;User &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in experiment &quot;</span><span class="si">%s</span><span class="s1">&quot; of group </span><span class="si">%s</span><span class="s1">.&#39;</span> <span class="o">%</span>
+                               <span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">experiment</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">experiment</span><span class="o">.</span><span class="n">groupId</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s1">&#39;User &quot;</span><span class="si">%s</span><span class="s1">&quot; is in experiment </span><span class="si">%s</span><span class="s1"> of group </span><span class="si">%s</span><span class="s1">.&#39;</span> <span class="o">%</span>
+                             <span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">experiment</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">experiment</span><span class="o">.</span><span class="n">groupId</span><span class="p">))</span>
+
+    <span class="c1"># Bucket user if not in white-list and in group (if any)</span>
+    <span class="n">variation_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_bucket</span><span class="p">(</span><span class="n">bucketing_id</span><span class="p">,</span> <span class="n">experiment</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">experiment</span><span class="o">.</span><span class="n">trafficAllocation</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">variation_id</span><span class="p">:</span>
+      <span class="n">variation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_variation_from_id</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">variation_id</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s1">&#39;User &quot;</span><span class="si">%s</span><span class="s1">&quot; is in variation &quot;</span><span class="si">%s</span><span class="s1">&quot; of experiment </span><span class="si">%s</span><span class="s1">.&#39;</span> <span class="o">%</span>
+                             <span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">variation</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">experiment</span><span class="o">.</span><span class="n">key</span><span class="p">))</span>
+      <span class="k">return</span> <span class="n">variation</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s1">&#39;User &quot;</span><span class="si">%s</span><span class="s1">&quot; is in no variation.&#39;</span> <span class="o">%</span> <span class="n">user_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Optimizely.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

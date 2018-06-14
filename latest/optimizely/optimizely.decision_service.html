@@ -1,0 +1,206 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>optimizely.decision_service module &#8212; Optimizely Python SDK  documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Optimizely Python SDK  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-optimizely.decision_service">
+<span id="optimizely-decision-service-module"></span><h1>optimizely.decision_service module<a class="headerlink" href="#module-optimizely.decision_service" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="optimizely.decision_service.Decision">
+<em class="property">class </em><code class="descclassname">optimizely.decision_service.</code><code class="descname">Decision</code><span class="sig-paren">(</span><em>experiment</em>, <em>variation</em>, <em>source</em><span class="sig-paren">)</span><a class="headerlink" href="#optimizely.decision_service.Decision" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="optimizely.decision_service.Decision.experiment">
+<code class="descname">experiment</code><a class="headerlink" href="#optimizely.decision_service.Decision.experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.decision_service.Decision.source">
+<code class="descname">source</code><a class="headerlink" href="#optimizely.decision_service.Decision.source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.decision_service.Decision.variation">
+<code class="descname">variation</code><a class="headerlink" href="#optimizely.decision_service.Decision.variation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="optimizely.decision_service.DecisionService">
+<em class="property">class </em><code class="descclassname">optimizely.decision_service.</code><code class="descname">DecisionService</code><span class="sig-paren">(</span><em>config</em>, <em>user_profile_service</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/decision_service.html#DecisionService"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.decision_service.DecisionService" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class encapsulating all decision related capabilities.</p>
+<dl class="method">
+<dt id="optimizely.decision_service.DecisionService.get_experiment_in_group">
+<code class="descname">get_experiment_in_group</code><span class="sig-paren">(</span><em>group</em>, <em>bucketing_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/decision_service.html#DecisionService.get_experiment_in_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.decision_service.DecisionService.get_experiment_in_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine which experiment in the group the user is bucketed into.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>group: The group to bucket the user into.
+bucketing_id: ID to be used for bucketing the user.</dd>
+<dt>Returns:</dt>
+<dd>Experiment if the user is bucketed into an experiment in the specified group. None otherwise.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.decision_service.DecisionService.get_forced_variation">
+<code class="descname">get_forced_variation</code><span class="sig-paren">(</span><em>experiment</em>, <em>user_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/decision_service.html#DecisionService.get_forced_variation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.decision_service.DecisionService.get_forced_variation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine if a user is forced into a variation for the given experiment and return that variation.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>experiment: Object representing the experiment for which user is to be bucketed.
+user_id: ID for the user.</dd>
+<dt>Returns:</dt>
+<dd>Variation in which the user with ID user_id is forced into. None if no variation.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.decision_service.DecisionService.get_stored_variation">
+<code class="descname">get_stored_variation</code><span class="sig-paren">(</span><em>experiment</em>, <em>user_profile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/decision_service.html#DecisionService.get_stored_variation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.decision_service.DecisionService.get_stored_variation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine if the user has a stored variation available for the given experiment and return that.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>experiment: Object representing the experiment for which user is to be bucketed.
+user_profile: UserProfile object representing the user’s profile.</dd>
+<dt>Returns:</dt>
+<dd>Variation if available. None otherwise.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.decision_service.DecisionService.get_variation">
+<code class="descname">get_variation</code><span class="sig-paren">(</span><em>experiment</em>, <em>user_id</em>, <em>attributes</em>, <em>ignore_user_profile=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/decision_service.html#DecisionService.get_variation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.decision_service.DecisionService.get_variation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Top-level function to help determine variation user should be put in.</p>
+<p>First, check if experiment is running.
+Second, check if user is forced in a variation.
+Third, check if there is a stored decision for the user and return the corresponding variation.
+Fourth, figure out if user is in the experiment by evaluating audience conditions if any.
+Fifth, bucket the user and return the variation.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>experiment: Experiment for which user variation needs to be determined.
+user_id: ID for user.
+attributes: Dict representing user attributes.
+ignore_user_profile: True to ignore the user profile lookup. Defaults to False.</dd>
+<dt>Returns:</dt>
+<dd>Variation user should see. None if user is not in experiment or experiment is not running.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.decision_service.DecisionService.get_variation_for_feature">
+<code class="descname">get_variation_for_feature</code><span class="sig-paren">(</span><em>feature</em>, <em>user_id</em>, <em>attributes=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/decision_service.html#DecisionService.get_variation_for_feature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.decision_service.DecisionService.get_variation_for_feature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the experiment/variation the user is bucketed in for the given feature.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>feature: Feature for which we are determining if it is enabled or not for the given user.
+user_id: ID for user.
+attributes: Dict representing user attributes.</dd>
+<dt>Returns:</dt>
+<dd>Decision namedtuple consisting of experiment and variation for the user.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.decision_service.DecisionService.get_variation_for_rollout">
+<code class="descname">get_variation_for_rollout</code><span class="sig-paren">(</span><em>rollout</em>, <em>user_id</em>, <em>attributes=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/decision_service.html#DecisionService.get_variation_for_rollout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.decision_service.DecisionService.get_variation_for_rollout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine which experiment/variation the user is in for a given rollout.
+Returns the variation of the first experiment the user qualifies for.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>rollout: Rollout for which we are getting the variation.
+user_id: ID for user.
+attributes: Dict representing user attributes.</dd>
+<dt>Returns:</dt>
+<dd>Decision namedtuple consisting of experiment and variation for the user.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/optimizely/optimizely.decision_service.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Optimizely Python SDK  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Optimizely.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.
+    </div>
+  </body>
+</html>

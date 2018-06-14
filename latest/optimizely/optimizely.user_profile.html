@@ -1,0 +1,168 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>optimizely.user_profile module &#8212; Optimizely Python SDK  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="optimizely.logger module" href="optimizely.logger.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-optimizely.user_profile">
+<span id="optimizely-user-profile-module"></span><h1>optimizely.user_profile module<a class="headerlink" href="#module-optimizely.user_profile" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="optimizely.user_profile.UserProfile">
+<em class="property">class </em><code class="descclassname">optimizely.user_profile.</code><code class="descname">UserProfile</code><span class="sig-paren">(</span><em>user_id</em>, <em>experiment_bucket_map=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/user_profile.html#UserProfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.user_profile.UserProfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class encapsulating information representing a user’s profile.</p>
+<p>user_id: User’s identifier.
+experiment_bucket_map: Dict mapping experiment ID to dict consisting of the</p>
+<blockquote>
+<div>variation ID identifying the variation for the user.</div></blockquote>
+<dl class="attribute">
+<dt id="optimizely.user_profile.UserProfile.EXPERIMENT_BUCKET_MAP_KEY">
+<code class="descname">EXPERIMENT_BUCKET_MAP_KEY</code><em class="property"> = 'experiment_bucket_map'</em><a class="headerlink" href="#optimizely.user_profile.UserProfile.EXPERIMENT_BUCKET_MAP_KEY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.user_profile.UserProfile.USER_ID_KEY">
+<code class="descname">USER_ID_KEY</code><em class="property"> = 'user_id'</em><a class="headerlink" href="#optimizely.user_profile.UserProfile.USER_ID_KEY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.user_profile.UserProfile.VARIATION_ID_KEY">
+<code class="descname">VARIATION_ID_KEY</code><em class="property"> = 'variation_id'</em><a class="headerlink" href="#optimizely.user_profile.UserProfile.VARIATION_ID_KEY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="optimizely.user_profile.UserProfile.get_variation_for_experiment">
+<code class="descname">get_variation_for_experiment</code><span class="sig-paren">(</span><em>experiment_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/user_profile.html#UserProfile.get_variation_for_experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.user_profile.UserProfile.get_variation_for_experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method to retrieve variation ID for given experiment.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>experiment_id: ID for experiment for which variation needs to be looked up for.</dd>
+<dt>Returns:</dt>
+<dd>Variation ID corresponding to the experiment. None if no decision available.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.user_profile.UserProfile.save_variation_for_experiment">
+<code class="descname">save_variation_for_experiment</code><span class="sig-paren">(</span><em>experiment_id</em>, <em>variation_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/user_profile.html#UserProfile.save_variation_for_experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.user_profile.UserProfile.save_variation_for_experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method to save new experiment/variation as part of the user’s profile.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>experiment_id: ID for experiment for which the decision is to be stored.
+variation_id: ID for variation that the user saw.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="optimizely.user_profile.UserProfileService">
+<em class="property">class </em><code class="descclassname">optimizely.user_profile.</code><code class="descname">UserProfileService</code><a class="reference internal" href="../_modules/optimizely/user_profile.html#UserProfileService"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.user_profile.UserProfileService" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class encapsulating user profile service functionality.
+Override with your own implementation for storing and retrieving the user profile.</p>
+<dl class="method">
+<dt id="optimizely.user_profile.UserProfileService.lookup">
+<code class="descname">lookup</code><span class="sig-paren">(</span><em>user_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/user_profile.html#UserProfileService.lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.user_profile.UserProfileService.lookup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch the user profile dict corresponding to the user ID.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>user_id: ID for user whose profile needs to be retrieved.</dd>
+<dt>Returns:</dt>
+<dd>Dict representing the user’s profile.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.user_profile.UserProfileService.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>user_profile</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/user_profile.html#UserProfileService.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.user_profile.UserProfileService.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the user profile dict sent to this method.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>user_profile: Dict representing the user’s profile.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="optimizely.logger.html" title="previous chapter">optimizely.logger module</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/optimizely/optimizely.user_profile.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Optimizely.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/optimizely/optimizely.user_profile.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

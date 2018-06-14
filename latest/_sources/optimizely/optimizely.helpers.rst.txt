@@ -1,0 +1,21 @@
+optimizely.helpers package
+==========================
+
+.. automodule:: optimizely.helpers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+
+   optimizely.helpers.audience
+   optimizely.helpers.condition
+   optimizely.helpers.constants
+   optimizely.helpers.enums
+   optimizely.helpers.event_tag_utils
+   optimizely.helpers.experiment
+   optimizely.helpers.validator
+

@@ -1,0 +1,179 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>optimizely.notification_center &#8212; Optimizely Python SDK  documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for optimizely.notification_center</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2017, Optimizely</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1"># http://www.apache.org/licenses/LICENSE-2.0</span>
+
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
+<span class="kn">from</span> <span class="nn">.helpers</span> <span class="k">import</span> <span class="n">enums</span>
+
+
+<div class="viewcode-block" id="NotificationCenter"><a class="viewcode-back" href="../../optimizely/optimizely.notification_center.html#optimizely.notification_center.NotificationCenter">[docs]</a><span class="k">class</span> <span class="nc">NotificationCenter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot; Class encapsulating Broadcast Notifications. The enums.NotifcationTypes includes predefined notifications.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">notification_id</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">notifications</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">enums</span><span class="o">.</span><span class="n">NotificationTypes</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">notifications</span><span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
+
+<div class="viewcode-block" id="NotificationCenter.add_notification_listener"><a class="viewcode-back" href="../../optimizely/optimizely.notification_center.html#optimizely.notification_center.NotificationCenter.add_notification_listener">[docs]</a>  <span class="k">def</span> <span class="nf">add_notification_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">notification_type</span><span class="p">,</span> <span class="n">notification_callback</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Add a notification callback to the notification center.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      notification_type: A string representing the notification type from .helpers.enums.NotificationTypes</span>
+<span class="sd">      notification_callback: closure of function to call when event is triggered.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Integer notification id used to remove the notification or -1 if the notification has already been added.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">notification_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">notifications</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">notifications</span><span class="p">[</span><span class="n">notification_type</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">notification_id</span><span class="p">,</span> <span class="n">notification_callback</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">tup</span><span class="p">:</span> <span class="n">tup</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">notification_callback</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">notifications</span><span class="p">[</span><span class="n">notification_type</span><span class="p">]),</span>
+                <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+          <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">notifications</span><span class="p">[</span><span class="n">notification_type</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">notification_id</span><span class="p">,</span> <span class="n">notification_callback</span><span class="p">))</span>
+
+    <span class="n">ret_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">notification_id</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">notification_id</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">ret_val</span></div>
+
+<div class="viewcode-block" id="NotificationCenter.remove_notification_listener"><a class="viewcode-back" href="../../optimizely/optimizely.notification_center.html#optimizely.notification_center.NotificationCenter.remove_notification_listener">[docs]</a>  <span class="k">def</span> <span class="nf">remove_notification_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">notification_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Remove a previously added notification callback.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      notification_id: The numeric id passed back from add_notification_listener</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The function returns boolean true if found and removed, false otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">notifications</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+      <span class="n">toRemove</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">tup</span><span class="p">:</span> <span class="n">tup</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">notification_id</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">toRemove</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">v</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">toRemove</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="NotificationCenter.clear_all_notifications"><a class="viewcode-back" href="../../optimizely/optimizely.notification_center.html#optimizely.notification_center.NotificationCenter.clear_all_notifications">[docs]</a>  <span class="k">def</span> <span class="nf">clear_all_notifications</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Remove all notifications &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">notifications</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">notifications</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="NotificationCenter.clear_notifications"><a class="viewcode-back" href="../../optimizely/optimizely.notification_center.html#optimizely.notification_center.NotificationCenter.clear_notifications">[docs]</a>  <span class="k">def</span> <span class="nf">clear_notifications</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">notification_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Remove notifications for a certain notification type</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      notification_type: key to the list of notifications .helpers.enums.NotificationTypes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">notifications</span><span class="p">[</span><span class="n">notification_type</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="NotificationCenter.send_notifications"><a class="viewcode-back" href="../../optimizely/optimizely.notification_center.html#optimizely.notification_center.NotificationCenter.send_notifications">[docs]</a>  <span class="k">def</span> <span class="nf">send_notifications</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">notification_type</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Fires off the notification for the specific event.  Uses var args to pass in a</span>
+<span class="sd">        arbitrary list of parameter according to which notification type was fired.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      notification_type: Type of notification to fire (String from .helpers.enums.NotificationTypes)</span>
+<span class="sd">      args: variable list of arguments to the callback.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">notification_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">notifications</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">notification_id</span><span class="p">,</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">notifications</span><span class="p">[</span><span class="n">notification_type</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">callback</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+          <span class="n">error</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Problem calling notify callback. Error: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">))</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Optimizely.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

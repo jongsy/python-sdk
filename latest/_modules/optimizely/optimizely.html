@@ -1,0 +1,606 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>optimizely.optimizely &#8212; Optimizely Python SDK  documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for optimizely.optimizely</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2016-2018, Optimizely</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1"># http://www.apache.org/licenses/LICENSE-2.0</span>
+
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+
+<span class="kn">import</span> <span class="nn">numbers</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">decision_service</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">entities</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">event_builder</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">exceptions</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">project_config</span>
+<span class="kn">from</span> <span class="nn">.error_handler</span> <span class="k">import</span> <span class="n">NoOpErrorHandler</span> <span class="k">as</span> <span class="n">noop_error_handler</span>
+<span class="kn">from</span> <span class="nn">.event_dispatcher</span> <span class="k">import</span> <span class="n">EventDispatcher</span> <span class="k">as</span> <span class="n">default_event_dispatcher</span>
+<span class="kn">from</span> <span class="nn">.helpers</span> <span class="k">import</span> <span class="n">enums</span>
+<span class="kn">from</span> <span class="nn">.helpers</span> <span class="k">import</span> <span class="n">validator</span>
+<span class="kn">from</span> <span class="nn">.logger</span> <span class="k">import</span> <span class="n">NoOpLogger</span> <span class="k">as</span> <span class="n">noop_logger</span>
+<span class="kn">from</span> <span class="nn">.logger</span> <span class="k">import</span> <span class="n">SimpleLogger</span>
+<span class="kn">from</span> <span class="nn">.notification_center</span> <span class="k">import</span> <span class="n">NotificationCenter</span> <span class="k">as</span> <span class="n">notification_center</span>
+
+
+<div class="viewcode-block" id="Optimizely"><a class="viewcode-back" href="../../optimizely/optimizely.optimizely.html#optimizely.optimizely.Optimizely">[docs]</a><span class="k">class</span> <span class="nc">Optimizely</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot; Class encapsulating all SDK functionality. &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+               <span class="n">datafile</span><span class="p">,</span>
+               <span class="n">event_dispatcher</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">error_handler</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">skip_json_validation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+               <span class="n">user_profile_service</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Optimizely init method for managing Custom projects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      datafile: JSON string representing the project.</span>
+<span class="sd">      event_dispatcher: Provides a dispatch_event method which if given a URL and params sends a request to it.</span>
+<span class="sd">      logger: Optional component which provides a log method to log messages. By default nothing would be logged.</span>
+<span class="sd">      error_handler: Optional component which provides a handle_error method to handle exceptions.</span>
+<span class="sd">                     By default all exceptions will be suppressed.</span>
+<span class="sd">      skip_json_validation: Optional boolean param which allows skipping JSON schema validation upon object invocation.</span>
+<span class="sd">                            By default JSON schema validation will be performed.</span>
+<span class="sd">      user_profile_service: Optional component which provides methods to store and manage user profiles.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">event_dispatcher</span> <span class="o">=</span> <span class="n">event_dispatcher</span> <span class="ow">or</span> <span class="n">default_event_dispatcher</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span> <span class="ow">or</span> <span class="n">noop_logger</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span> <span class="o">=</span> <span class="n">error_handler</span> <span class="ow">or</span> <span class="n">noop_error_handler</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_validate_instantiation_options</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="n">skip_json_validation</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidInputException</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span> <span class="o">=</span> <span class="kc">False</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">SimpleLogger</span><span class="p">()</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">project_config</span><span class="o">.</span><span class="n">ProjectConfig</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span> <span class="o">=</span> <span class="kc">False</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="kc">None</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">SimpleLogger</span><span class="p">()</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_INPUT_ERROR</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;datafile&#39;</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">was_parsing_successful</span><span class="p">():</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span> <span class="o">=</span> <span class="kc">False</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">SimpleLogger</span><span class="p">()</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">UNSUPPORTED_DATAFILE_VERSION</span><span class="p">)</span>
+      <span class="k">return</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">event_builder</span> <span class="o">=</span> <span class="n">event_builder</span><span class="o">.</span><span class="n">EventBuilder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">decision_service</span> <span class="o">=</span> <span class="n">decision_service</span><span class="o">.</span><span class="n">DecisionService</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">user_profile_service</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">notification_center</span> <span class="o">=</span> <span class="n">notification_center</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_validate_instantiation_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datafile</span><span class="p">,</span> <span class="n">skip_json_validation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to validate all instantiation parameters.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      datafile: JSON string representing the project.</span>
+<span class="sd">      skip_json_validation: Boolean representing whether JSON schema validation needs to be skipped or not.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      Exception if provided instantiation options are valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_json_validation</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">validator</span><span class="o">.</span><span class="n">is_datafile_valid</span><span class="p">(</span><span class="n">datafile</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidInputException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_INPUT_ERROR</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;datafile&#39;</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">validator</span><span class="o">.</span><span class="n">is_event_dispatcher_valid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_dispatcher</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidInputException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_INPUT_ERROR</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;event_dispatcher&#39;</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">validator</span><span class="o">.</span><span class="n">is_logger_valid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidInputException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_INPUT_ERROR</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;logger&#39;</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">validator</span><span class="o">.</span><span class="n">is_error_handler_valid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidInputException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_INPUT_ERROR</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;error_handler&#39;</span><span class="p">))</span>
+
+  <span class="k">def</span> <span class="nf">_validate_user_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">event_tags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to validate user inputs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      attributes: Dict representing user attributes.</span>
+<span class="sd">      event_tags: Dict representing metadata associated with an event.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Boolean True if inputs are valid. False otherwise.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">attributes</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">validator</span><span class="o">.</span><span class="n">are_attributes_valid</span><span class="p">(</span><span class="n">attributes</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Provided attributes are in an invalid format.&#39;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidAttributeException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_ATTRIBUTE_FORMAT</span><span class="p">))</span>
+      <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">event_tags</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">validator</span><span class="o">.</span><span class="n">are_event_tags_valid</span><span class="p">(</span><span class="n">event_tags</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Provided event tags are in an invalid format.&#39;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidEventTagException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_EVENT_TAG_FORMAT</span><span class="p">))</span>
+      <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span>
+
+  <span class="k">def</span> <span class="nf">_get_decisions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to retrieve decisions for the user for experiment(s) using the provided event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event: The event which needs to be recorded.</span>
+<span class="sd">      user_id: ID for user.</span>
+<span class="sd">      attributes: Dict representing user attributes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      List of tuples representing valid experiment IDs and variation IDs into which the user is bucketed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">decisions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">experiment_id</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">experimentIds</span><span class="p">:</span>
+      <span class="n">experiment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_experiment_from_id</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">)</span>
+      <span class="n">variation_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_variation</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">variation_key</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s1">&#39;Not tracking user &quot;</span><span class="si">%s</span><span class="s1">&quot; for experiment &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">experiment</span><span class="o">.</span><span class="n">key</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="n">variation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_variation_from_key</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">variation_key</span><span class="p">)</span>
+      <span class="n">decisions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">experiment_id</span><span class="p">,</span> <span class="n">variation</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">decisions</span>
+
+  <span class="k">def</span> <span class="nf">_send_impression_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">variation</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to send impression event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      experiment: Experiment for which impression event is being sent.</span>
+<span class="sd">      variation: Variation picked for user for the given experiment.</span>
+<span class="sd">      user_id: ID for user.</span>
+<span class="sd">      attributes: Dict representing user attributes and values which need to be recorded.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">impression_event</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_builder</span><span class="o">.</span><span class="n">create_impression_event</span><span class="p">(</span><span class="n">experiment</span><span class="p">,</span>
+                                                                  <span class="n">variation</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                                  <span class="n">user_id</span><span class="p">,</span>
+                                                                  <span class="n">attributes</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                    <span class="s1">&#39;Dispatching impression event to URL </span><span class="si">%s</span><span class="s1"> with params </span><span class="si">%s</span><span class="s1">.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">impression_event</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+                                                                                <span class="n">impression_event</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">event_dispatcher</span><span class="o">.</span><span class="n">dispatch_event</span><span class="p">(</span><span class="n">impression_event</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+      <span class="n">error</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Unable to dispatch impression event. Error: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">notification_center</span><span class="o">.</span><span class="n">send_notifications</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">NotificationTypes</span><span class="o">.</span><span class="n">ACTIVATE</span><span class="p">,</span>
+                                                <span class="n">experiment</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">,</span> <span class="n">variation</span><span class="p">,</span> <span class="n">impression_event</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_get_feature_variable_for_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_key</span><span class="p">,</span> <span class="n">variable_key</span><span class="p">,</span> <span class="n">variable_type</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to determine value for a certain variable attached to a feature flag based on type of variable.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      feature_key: Key of the feature whose variable&#39;s value is being accessed.</span>
+<span class="sd">      variable_key: Key of the variable whose value is to be accessed.</span>
+<span class="sd">      variable_type: Type of variable which could be one of boolean/double/integer/string.</span>
+<span class="sd">      user_id: ID for user.</span>
+<span class="sd">      attributes: Dict representing user attributes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Value of the variable. None if:</span>
+<span class="sd">      - Feature key is invalid.</span>
+<span class="sd">      - Variable key is invalid.</span>
+<span class="sd">      - Mismatch with type of variable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">feature_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">NONE_FEATURE_KEY_PARAMETER</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">variable_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">NONE_VARIABLE_KEY_PARAMETER</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">user_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">NONE_USER_ID_PARAMETER</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">feature_flag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_feature_from_key</span><span class="p">(</span><span class="n">feature_key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">feature_flag</span><span class="p">:</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">variable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_variable_for_feature</span><span class="p">(</span><span class="n">feature_key</span><span class="p">,</span> <span class="n">variable_key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">variable</span><span class="p">:</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># Return None if type differs</span>
+    <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="n">variable_type</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+        <span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+        <span class="s1">&#39;Requested variable type &quot;</span><span class="si">%s</span><span class="s1">&quot;, but variable is of type &quot;</span><span class="si">%s</span><span class="s1">&quot;. &#39;</span>
+        <span class="s1">&#39;Use correct API to retrieve value. Returning None.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">variable_type</span><span class="p">,</span> <span class="n">variable</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+      <span class="p">)</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">decision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decision_service</span><span class="o">.</span><span class="n">get_variation_for_feature</span><span class="p">(</span><span class="n">feature_flag</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">decision</span><span class="o">.</span><span class="n">variation</span><span class="p">:</span>
+      <span class="n">variable_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_variable_value_for_variation</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">decision</span><span class="o">.</span><span class="n">variation</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">variable_value</span> <span class="o">=</span> <span class="n">variable</span><span class="o">.</span><span class="n">defaultValue</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+        <span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+        <span class="s1">&#39;User &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in any variation or rollout rule. &#39;</span>
+        <span class="s1">&#39;Returning default value for variable &quot;</span><span class="si">%s</span><span class="s1">&quot; of feature flag &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">variable_key</span><span class="p">,</span> <span class="n">feature_key</span><span class="p">)</span>
+      <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">actual_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_typecast_value</span><span class="p">(</span><span class="n">variable_value</span><span class="p">,</span> <span class="n">variable_type</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Unable to cast value. Returning None.&#39;</span><span class="p">)</span>
+      <span class="n">actual_value</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">actual_value</span>
+
+<div class="viewcode-block" id="Optimizely.activate"><a class="viewcode-back" href="../../optimizely/optimizely.optimizely.html#optimizely.optimizely.Optimizely.activate">[docs]</a>  <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Buckets visitor and sends impression event to Optimizely.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      experiment_key: Experiment which needs to be activated.</span>
+<span class="sd">      user_id: ID for user.</span>
+<span class="sd">      attributes: Dict representing user attributes and values which need to be recorded.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Variation key representing the variation the user will be bucketed in.</span>
+<span class="sd">      None if user is not in experiment or if experiment is not Running.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_DATAFILE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;activate&#39;</span><span class="p">))</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">variation_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_variation</span><span class="p">(</span><span class="n">experiment_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">variation_key</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s1">&#39;Not activating user &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span> <span class="o">%</span> <span class="n">user_id</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">experiment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_experiment_from_key</span><span class="p">(</span><span class="n">experiment_key</span><span class="p">)</span>
+    <span class="n">variation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_variation_from_key</span><span class="p">(</span><span class="n">experiment_key</span><span class="p">,</span> <span class="n">variation_key</span><span class="p">)</span>
+
+    <span class="c1"># Create and dispatch impression event</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s1">&#39;Activating user &quot;</span><span class="si">%s</span><span class="s1">&quot; in experiment &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">experiment</span><span class="o">.</span><span class="n">key</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_send_impression_event</span><span class="p">(</span><span class="n">experiment</span><span class="p">,</span> <span class="n">variation</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">variation</span><span class="o">.</span><span class="n">key</span></div>
+
+<div class="viewcode-block" id="Optimizely.track"><a class="viewcode-back" href="../../optimizely/optimizely.optimizely.html#optimizely.optimizely.Optimizely.track">[docs]</a>  <span class="k">def</span> <span class="nf">track</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">event_tags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Send conversion event to Optimizely.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_key: Event key representing the event which needs to be recorded.</span>
+<span class="sd">      user_id: ID for user.</span>
+<span class="sd">      attributes: Dict representing visitor attributes and values which need to be recorded.</span>
+<span class="sd">      event_tags: Dict representing metadata associated with the event.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_DATAFILE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;track&#39;</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_user_inputs</span><span class="p">(</span><span class="n">attributes</span><span class="p">,</span> <span class="n">event_tags</span><span class="p">):</span>
+      <span class="k">return</span>
+
+    <span class="n">event</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_event</span><span class="p">(</span><span class="n">event_key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">event</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s1">&#39;Not tracking user &quot;</span><span class="si">%s</span><span class="s1">&quot; for event &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">event_key</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="c1"># Filter out experiments that are not running or that do not include the user in audience</span>
+    <span class="c1"># conditions and then determine the decision i.e. the corresponding variation</span>
+    <span class="n">decisions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_decisions</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span>
+
+    <span class="c1"># Create and dispatch conversion event if there are any decisions</span>
+    <span class="k">if</span> <span class="n">decisions</span><span class="p">:</span>
+      <span class="n">conversion_event</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_builder</span><span class="o">.</span><span class="n">create_conversion_event</span><span class="p">(</span>
+        <span class="n">event_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">,</span> <span class="n">event_tags</span><span class="p">,</span> <span class="n">decisions</span>
+      <span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s1">&#39;Tracking event &quot;</span><span class="si">%s</span><span class="s1">&quot; for user &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">event_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">))</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                      <span class="s1">&#39;Dispatching conversion event to URL </span><span class="si">%s</span><span class="s1"> with params </span><span class="si">%s</span><span class="s1">.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">conversion_event</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+                                                                                  <span class="n">conversion_event</span><span class="o">.</span><span class="n">params</span><span class="p">))</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_dispatcher</span><span class="o">.</span><span class="n">dispatch_event</span><span class="p">(</span><span class="n">conversion_event</span><span class="p">)</span>
+      <span class="k">except</span><span class="p">:</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Unable to dispatch conversion event. Error: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">))</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">notification_center</span><span class="o">.</span><span class="n">send_notifications</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">NotificationTypes</span><span class="o">.</span><span class="n">TRACK</span><span class="p">,</span> <span class="n">event_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span>
+                                                  <span class="n">attributes</span><span class="p">,</span> <span class="n">event_tags</span><span class="p">,</span> <span class="n">conversion_event</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s1">&#39;There are no valid experiments for event &quot;</span><span class="si">%s</span><span class="s1">&quot; to track.&#39;</span> <span class="o">%</span> <span class="n">event_key</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Optimizely.get_variation"><a class="viewcode-back" href="../../optimizely/optimizely.optimizely.html#optimizely.optimizely.Optimizely.get_variation">[docs]</a>  <span class="k">def</span> <span class="nf">get_variation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Gets variation where user will be bucketed.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      experiment_key: Experiment for which user variation needs to be determined.</span>
+<span class="sd">      user_id: ID for user.</span>
+<span class="sd">      attributes: Dict representing user attributes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Variation key representing the variation the user will be bucketed in.</span>
+<span class="sd">      None if user is not in experiment or if experiment is not Running.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_DATAFILE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;get_variation&#39;</span><span class="p">))</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">experiment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_experiment_from_key</span><span class="p">(</span><span class="n">experiment_key</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">experiment</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                      <span class="s1">&#39;Experiment key &quot;</span><span class="si">%s</span><span class="s1">&quot; is invalid. Not activating user &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">experiment_key</span><span class="p">,</span>
+                                                                                     <span class="n">user_id</span><span class="p">))</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_user_inputs</span><span class="p">(</span><span class="n">attributes</span><span class="p">):</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">variation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decision_service</span><span class="o">.</span><span class="n">get_variation</span><span class="p">(</span><span class="n">experiment</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">variation</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">variation</span><span class="o">.</span><span class="n">key</span>
+
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Optimizely.is_feature_enabled"><a class="viewcode-back" href="../../optimizely/optimizely.optimizely.html#optimizely.optimizely.Optimizely.is_feature_enabled">[docs]</a>  <span class="k">def</span> <span class="nf">is_feature_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Returns true if the feature is enabled for the given user.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      feature_key: The key of the feature for which we are determining if it is enabled or not for the given user.</span>
+<span class="sd">      user_id: ID for user.</span>
+<span class="sd">      attributes: Dict representing user attributes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      True if the feature is enabled for the user. False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_DATAFILE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;is_feature_enabled&#39;</span><span class="p">))</span>
+      <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">feature_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">NONE_FEATURE_KEY_PARAMETER</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">user_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">NONE_USER_ID_PARAMETER</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">feature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_feature_from_key</span><span class="p">(</span><span class="n">feature_key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">feature</span><span class="p">:</span>
+      <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">decision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decision_service</span><span class="o">.</span><span class="n">get_variation_for_feature</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">decision</span><span class="o">.</span><span class="n">variation</span> <span class="ow">and</span> <span class="n">decision</span><span class="o">.</span><span class="n">variation</span><span class="o">.</span><span class="n">featureEnabled</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s1">&#39;Feature &quot;</span><span class="si">%s</span><span class="s1">&quot; is enabled for user &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">feature_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">))</span>
+      <span class="c1"># Send event if Decision came from an experiment.</span>
+      <span class="k">if</span> <span class="n">decision</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="n">decision_service</span><span class="o">.</span><span class="n">DECISION_SOURCE_EXPERIMENT</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_send_impression_event</span><span class="p">(</span><span class="n">decision</span><span class="o">.</span><span class="n">experiment</span><span class="p">,</span>
+                                    <span class="n">decision</span><span class="o">.</span><span class="n">variation</span><span class="p">,</span>
+                                    <span class="n">user_id</span><span class="p">,</span>
+                                    <span class="n">attributes</span><span class="p">)</span>
+
+      <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s1">&#39;Feature &quot;</span><span class="si">%s</span><span class="s1">&quot; is not enabled for user &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">feature_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">))</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Optimizely.get_enabled_features"><a class="viewcode-back" href="../../optimizely/optimizely.optimizely.html#optimizely.optimizely.Optimizely.get_enabled_features">[docs]</a>  <span class="k">def</span> <span class="nf">get_enabled_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Returns the list of features that are enabled for the user.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      user_id: ID for user.</span>
+<span class="sd">      attributes: Dict representing user attributes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of the keys of the features that are enabled for the user.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">enabled_features</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_DATAFILE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;get_enabled_features&#39;</span><span class="p">))</span>
+      <span class="k">return</span> <span class="n">enabled_features</span>
+
+    <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">feature_key_map</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_feature_enabled</span><span class="p">(</span><span class="n">feature</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">):</span>
+        <span class="n">enabled_features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feature</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">enabled_features</span></div>
+
+<div class="viewcode-block" id="Optimizely.get_feature_variable_boolean"><a class="viewcode-back" href="../../optimizely/optimizely.optimizely.html#optimizely.optimizely.Optimizely.get_feature_variable_boolean">[docs]</a>  <span class="k">def</span> <span class="nf">get_feature_variable_boolean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_key</span><span class="p">,</span> <span class="n">variable_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Returns value for a certain boolean variable attached to a feature flag.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      feature_key: Key of the feature whose variable&#39;s value is being accessed.</span>
+<span class="sd">      variable_key: Key of the variable whose value is to be accessed.</span>
+<span class="sd">      user_id: ID for user.</span>
+<span class="sd">      attributes: Dict representing user attributes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Boolean value of the variable. None if:</span>
+<span class="sd">      - Feature key is invalid.</span>
+<span class="sd">      - Variable key is invalid.</span>
+<span class="sd">      - Mismatch with type of variable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">variable_type</span> <span class="o">=</span> <span class="n">entities</span><span class="o">.</span><span class="n">Variable</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">BOOLEAN</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_feature_variable_for_type</span><span class="p">(</span><span class="n">feature_key</span><span class="p">,</span> <span class="n">variable_key</span><span class="p">,</span> <span class="n">variable_type</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Optimizely.get_feature_variable_double"><a class="viewcode-back" href="../../optimizely/optimizely.optimizely.html#optimizely.optimizely.Optimizely.get_feature_variable_double">[docs]</a>  <span class="k">def</span> <span class="nf">get_feature_variable_double</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_key</span><span class="p">,</span> <span class="n">variable_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Returns value for a certain double variable attached to a feature flag.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      feature_key: Key of the feature whose variable&#39;s value is being accessed.</span>
+<span class="sd">      variable_key: Key of the variable whose value is to be accessed.</span>
+<span class="sd">      user_id: ID for user.</span>
+<span class="sd">      attributes: Dict representing user attributes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Double value of the variable. None if:</span>
+<span class="sd">      - Feature key is invalid.</span>
+<span class="sd">      - Variable key is invalid.</span>
+<span class="sd">      - Mismatch with type of variable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">variable_type</span> <span class="o">=</span> <span class="n">entities</span><span class="o">.</span><span class="n">Variable</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">DOUBLE</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_feature_variable_for_type</span><span class="p">(</span><span class="n">feature_key</span><span class="p">,</span> <span class="n">variable_key</span><span class="p">,</span> <span class="n">variable_type</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Optimizely.get_feature_variable_integer"><a class="viewcode-back" href="../../optimizely/optimizely.optimizely.html#optimizely.optimizely.Optimizely.get_feature_variable_integer">[docs]</a>  <span class="k">def</span> <span class="nf">get_feature_variable_integer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_key</span><span class="p">,</span> <span class="n">variable_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Returns value for a certain integer variable attached to a feature flag.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      feature_key: Key of the feature whose variable&#39;s value is being accessed.</span>
+<span class="sd">      variable_key: Key of the variable whose value is to be accessed.</span>
+<span class="sd">      user_id: ID for user.</span>
+<span class="sd">      attributes: Dict representing user attributes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Integer value of the variable. None if:</span>
+<span class="sd">      - Feature key is invalid.</span>
+<span class="sd">      - Variable key is invalid.</span>
+<span class="sd">      - Mismatch with type of variable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">variable_type</span> <span class="o">=</span> <span class="n">entities</span><span class="o">.</span><span class="n">Variable</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">INTEGER</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_feature_variable_for_type</span><span class="p">(</span><span class="n">feature_key</span><span class="p">,</span> <span class="n">variable_key</span><span class="p">,</span> <span class="n">variable_type</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Optimizely.get_feature_variable_string"><a class="viewcode-back" href="../../optimizely/optimizely.optimizely.html#optimizely.optimizely.Optimizely.get_feature_variable_string">[docs]</a>  <span class="k">def</span> <span class="nf">get_feature_variable_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_key</span><span class="p">,</span> <span class="n">variable_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Returns value for a certain string variable attached to a feature.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      feature_key: Key of the feature whose variable&#39;s value is being accessed.</span>
+<span class="sd">      variable_key: Key of the variable whose value is to be accessed.</span>
+<span class="sd">      user_id: ID for user.</span>
+<span class="sd">      attributes: Dict representing user attributes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      String value of the variable. None if:</span>
+<span class="sd">      - Feature key is invalid.</span>
+<span class="sd">      - Variable key is invalid.</span>
+<span class="sd">      - Mismatch with type of variable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">variable_type</span> <span class="o">=</span> <span class="n">entities</span><span class="o">.</span><span class="n">Variable</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">STRING</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_feature_variable_for_type</span><span class="p">(</span><span class="n">feature_key</span><span class="p">,</span> <span class="n">variable_key</span><span class="p">,</span> <span class="n">variable_type</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Optimizely.set_forced_variation"><a class="viewcode-back" href="../../optimizely/optimizely.optimizely.html#optimizely.optimizely.Optimizely.set_forced_variation">[docs]</a>  <span class="k">def</span> <span class="nf">set_forced_variation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">variation_key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Force a user into a variation for a given experiment.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">     experiment_key: A string key identifying the experiment.</span>
+<span class="sd">     user_id: The user ID.</span>
+<span class="sd">     variation_key: A string variation key that specifies the variation which the user.</span>
+<span class="sd">     will be forced into. If null, then clear the existing experiment-to-variation mapping.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean value that indicates if the set completed successfully.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">set_forced_variation</span><span class="p">(</span><span class="n">experiment_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">variation_key</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Optimizely.get_forced_variation"><a class="viewcode-back" href="../../optimizely/optimizely.optimizely.html#optimizely.optimizely.Optimizely.get_forced_variation">[docs]</a>  <span class="k">def</span> <span class="nf">get_forced_variation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Gets the forced variation for a given user and experiment.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      experiment_key: A string key identifying the experiment.</span>
+<span class="sd">      user_id: The user ID.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The forced variation key. None if no forced variation key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">forced_variation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_forced_variation</span><span class="p">(</span><span class="n">experiment_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">forced_variation</span><span class="o">.</span><span class="n">key</span> <span class="k">if</span> <span class="n">forced_variation</span> <span class="k">else</span> <span class="kc">None</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Optimizely.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

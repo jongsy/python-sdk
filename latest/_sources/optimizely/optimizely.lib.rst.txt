@@ -1,0 +1,15 @@
+optimizely.lib package
+======================
+
+.. automodule:: optimizely.lib
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+
+   optimizely.lib.pymmh3
+

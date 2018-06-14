@@ -1,0 +1,7 @@
+optimizely.decision\_service module
+===================================
+
+.. automodule:: optimizely.decision_service
+    :members:
+    :undoc-members:
+    :show-inheritance:

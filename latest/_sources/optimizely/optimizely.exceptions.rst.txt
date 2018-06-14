@@ -1,0 +1,7 @@
+optimizely.exceptions module
+============================
+
+.. automodule:: optimizely.exceptions
+    :members:
+    :undoc-members:
+    :show-inheritance:

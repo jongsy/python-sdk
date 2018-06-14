@@ -1,0 +1,7 @@
+optimizely.optimizely module
+============================
+
+.. automodule:: optimizely.optimizely
+    :members:
+    :undoc-members:
+    :show-inheritance:

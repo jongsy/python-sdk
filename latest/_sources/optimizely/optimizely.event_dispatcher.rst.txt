@@ -1,0 +1,7 @@
+optimizely.event\_dispatcher module
+===================================
+
+.. automodule:: optimizely.event_dispatcher
+    :members:
+    :undoc-members:
+    :show-inheritance:

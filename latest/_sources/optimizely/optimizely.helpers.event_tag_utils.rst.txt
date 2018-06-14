@@ -1,0 +1,7 @@
+optimizely.helpers.event\_tag\_utils module
+===========================================
+
+.. automodule:: optimizely.helpers.event_tag_utils
+    :members:
+    :undoc-members:
+    :show-inheritance:

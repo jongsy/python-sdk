@@ -1,0 +1,668 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>optimizely.project_config &#8212; Optimizely Python SDK  documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for optimizely.project_config</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2016-2018, Optimizely</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1"># http://www.apache.org/licenses/LICENSE-2.0</span>
+
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">.helpers</span> <span class="k">import</span> <span class="n">condition</span> <span class="k">as</span> <span class="n">condition_helper</span>
+<span class="kn">from</span> <span class="nn">.helpers</span> <span class="k">import</span> <span class="n">enums</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">entities</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">exceptions</span>
+
+<span class="n">REVENUE_GOAL_KEY</span> <span class="o">=</span> <span class="s1">&#39;Total Revenue&#39;</span>
+<span class="n">V1_CONFIG_VERSION</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>
+<span class="n">V2_CONFIG_VERSION</span> <span class="o">=</span> <span class="s1">&#39;2&#39;</span>
+
+<span class="n">SUPPORTED_VERSIONS</span> <span class="o">=</span> <span class="p">[</span><span class="n">V2_CONFIG_VERSION</span><span class="p">]</span>
+<span class="n">UNSUPPORTED_VERSIONS</span> <span class="o">=</span> <span class="p">[</span><span class="n">V1_CONFIG_VERSION</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="ProjectConfig"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig">[docs]</a><span class="k">class</span> <span class="nc">ProjectConfig</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot; Representation of the Optimizely project config. &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datafile</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">error_handler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; ProjectConfig init method to load and set project config data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      datafile: JSON string representing the project.</span>
+<span class="sd">      logger: Provides a log message to send log messages to.</span>
+<span class="sd">      error_handler: Provides a handle_error method to handle exceptions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">datafile</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">parsing_succeeded</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span> <span class="o">=</span> <span class="n">error_handler</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;version&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="ow">in</span> <span class="n">UNSUPPORTED_VERSIONS</span><span class="p">:</span>
+      <span class="k">return</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">account_id</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;accountId&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;projectId&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">revision</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;revision&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;groups&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;experiments&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;events&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;attributes&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">audiences</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;audiences&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">feature_flags</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;featureFlags&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">rollouts</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rollouts&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">anonymize_ip</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;anonymizeIP&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># Utility maps for quick lookup</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">group_id_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_key_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">entities</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">experiment_key_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_key_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="n">entities</span><span class="o">.</span><span class="n">Experiment</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">event_key_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_key_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="n">entities</span><span class="o">.</span><span class="n">Event</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">attribute_key_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_key_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="n">entities</span><span class="o">.</span><span class="n">Attribute</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">audience_id_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_key_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">audiences</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">entities</span><span class="o">.</span><span class="n">Audience</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">rollout_id_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_key_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rollouts</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">entities</span><span class="o">.</span><span class="n">Layer</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rollout_id_map</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+      <span class="k">for</span> <span class="n">experiment</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">experiments</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">experiment_key_map</span><span class="p">[</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">entities</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span><span class="o">**</span><span class="n">experiment</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">audience_id_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_deserialize_audience</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">audience_id_map</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_id_map</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+      <span class="n">experiments_in_group_key_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_key_map</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">experiments</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="n">entities</span><span class="o">.</span><span class="n">Experiment</span><span class="p">)</span>
+      <span class="k">for</span> <span class="n">experiment</span> <span class="ow">in</span> <span class="n">experiments_in_group_key_map</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">experiment</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+          <span class="s1">&#39;groupId&#39;</span><span class="p">:</span> <span class="n">group</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+          <span class="s1">&#39;groupPolicy&#39;</span><span class="p">:</span> <span class="n">group</span><span class="o">.</span><span class="n">policy</span>
+        <span class="p">})</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">experiment_key_map</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">experiments_in_group_key_map</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">experiment_id_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">variation_key_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">variation_id_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">variation_variable_usage_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">experiment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_key_map</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">experiment_id_map</span><span class="p">[</span><span class="n">experiment</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">experiment</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">variation_key_map</span><span class="p">[</span><span class="n">experiment</span><span class="o">.</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_key_map</span><span class="p">(</span>
+        <span class="n">experiment</span><span class="o">.</span><span class="n">variations</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="n">entities</span><span class="o">.</span><span class="n">Variation</span>
+      <span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">variation_id_map</span><span class="p">[</span><span class="n">experiment</span><span class="o">.</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="k">for</span> <span class="n">variation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variation_key_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variation_id_map</span><span class="p">[</span><span class="n">experiment</span><span class="o">.</span><span class="n">key</span><span class="p">][</span><span class="n">variation</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">variation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variation_variable_usage_map</span><span class="p">[</span><span class="n">variation</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_key_map</span><span class="p">(</span>
+          <span class="n">variation</span><span class="o">.</span><span class="n">variables</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">entities</span><span class="o">.</span><span class="n">Variation</span><span class="o">.</span><span class="n">VariableUsage</span>
+        <span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">feature_key_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_key_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_flags</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="n">entities</span><span class="o">.</span><span class="n">FeatureFlag</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_key_map</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+      <span class="n">feature</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_key_map</span><span class="p">(</span><span class="n">feature</span><span class="o">.</span><span class="n">variables</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="n">entities</span><span class="o">.</span><span class="n">Variable</span><span class="p">)</span>
+
+      <span class="c1"># Check if any of the experiments are in a group and add the group id for faster bucketing later on</span>
+      <span class="k">for</span> <span class="n">exp_id</span> <span class="ow">in</span> <span class="n">feature</span><span class="o">.</span><span class="n">experimentIds</span><span class="p">:</span>
+        <span class="n">experiment_in_feature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_id_map</span><span class="p">[</span><span class="n">exp_id</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">experiment_in_feature</span><span class="o">.</span><span class="n">groupId</span><span class="p">:</span>
+          <span class="n">feature</span><span class="o">.</span><span class="n">groupId</span> <span class="o">=</span> <span class="n">experiment_in_feature</span><span class="o">.</span><span class="n">groupId</span>
+          <span class="c1"># Experiments in feature can only belong to one mutex group</span>
+          <span class="k">break</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">parsing_succeeded</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Map of user IDs to another map of experiments to variations.</span>
+    <span class="c1"># This contains all the forced variations set by the user</span>
+    <span class="c1"># by calling set_forced_variation (it is not the same as the</span>
+    <span class="c1"># whitelisting forcedVariations data structure).</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">forced_variation_map</span> <span class="o">=</span> <span class="p">{}</span>
+
+  <span class="nd">@staticmethod</span>
+  <span class="k">def</span> <span class="nf">_generate_key_map</span><span class="p">(</span><span class="n">entity_list</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">entity_class</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to generate map from key to entity object for given list of dicts.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      entity_list: List consisting of dict.</span>
+<span class="sd">      key: Key in each dict which will be key in the map.</span>
+<span class="sd">      entity_class: Class representing the entity.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Map mapping key to entity object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">key_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">entity_list</span><span class="p">:</span>
+      <span class="n">key_map</span><span class="p">[</span><span class="n">obj</span><span class="p">[</span><span class="n">key</span><span class="p">]]</span> <span class="o">=</span> <span class="n">entity_class</span><span class="p">(</span><span class="o">**</span><span class="n">obj</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">key_map</span>
+
+  <span class="nd">@staticmethod</span>
+  <span class="k">def</span> <span class="nf">_deserialize_audience</span><span class="p">(</span><span class="n">audience_map</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to de-serialize and populate audience map with the condition list and structure.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      audience_map: Dict mapping audience ID to audience object.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Dict additionally consisting of condition list and structure on every audience object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">audience</span> <span class="ow">in</span> <span class="n">audience_map</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+      <span class="n">condition_structure</span><span class="p">,</span> <span class="n">condition_list</span> <span class="o">=</span> <span class="n">condition_helper</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">audience</span><span class="o">.</span><span class="n">conditions</span><span class="p">)</span>
+      <span class="n">audience</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="s1">&#39;conditionStructure&#39;</span><span class="p">:</span> <span class="n">condition_structure</span><span class="p">,</span>
+        <span class="s1">&#39;conditionList&#39;</span><span class="p">:</span> <span class="n">condition_list</span>
+      <span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">audience_map</span>
+
+<div class="viewcode-block" id="ProjectConfig.get_typecast_value"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_typecast_value">[docs]</a>  <span class="k">def</span> <span class="nf">get_typecast_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to determine actual value based on type of feature variable.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      value: Value in string form as it was parsed from datafile.</span>
+<span class="sd">      type: Type denoting the feature flag type.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">      Value type-casted based on type of feature variable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="n">entities</span><span class="o">.</span><span class="n">Variable</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;true&#39;</span>
+    <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="n">entities</span><span class="o">.</span><span class="n">Variable</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">INTEGER</span><span class="p">:</span>
+      <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="n">entities</span><span class="o">.</span><span class="n">Variable</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">DOUBLE</span><span class="p">:</span>
+      <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">value</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.was_parsing_successful"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.was_parsing_successful">[docs]</a>  <span class="k">def</span> <span class="nf">was_parsing_successful</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Helper method to determine if parsing the datafile was successful.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Boolean depending on whether parsing the datafile succeeded or not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parsing_succeeded</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_version"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_version">[docs]</a>  <span class="k">def</span> <span class="nf">get_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get version of the datafile.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Version of the datafile.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_revision"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_revision">[docs]</a>  <span class="k">def</span> <span class="nf">get_revision</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get revision of the datafile.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Revision of the datafile.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">revision</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_account_id"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_account_id">[docs]</a>  <span class="k">def</span> <span class="nf">get_account_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get account ID from the config.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Account ID information from the config.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">account_id</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_project_id"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_project_id">[docs]</a>  <span class="k">def</span> <span class="nf">get_project_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get project ID from the config.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Project ID information from the config.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_experiment_from_key"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_experiment_from_key">[docs]</a>  <span class="k">def</span> <span class="nf">get_experiment_from_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get experiment for the provided experiment key.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      experiment_key: Experiment key for which experiment is to be determined.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Experiment corresponding to the provided experiment key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">experiment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_key_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">experiment_key</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">experiment</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">experiment</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Experiment key &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in datafile.&#39;</span> <span class="o">%</span> <span class="n">experiment_key</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidExperimentException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_EXPERIMENT_KEY_ERROR</span><span class="p">))</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_experiment_from_id"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_experiment_from_id">[docs]</a>  <span class="k">def</span> <span class="nf">get_experiment_from_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get experiment for the provided experiment ID.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      experiment_id: Experiment ID for which experiment is to be determined.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Experiment corresponding to the provided experiment ID.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">experiment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_id_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">experiment</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">experiment</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Experiment ID &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in datafile.&#39;</span> <span class="o">%</span> <span class="n">experiment_id</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidExperimentException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_EXPERIMENT_KEY_ERROR</span><span class="p">))</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_group"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_group">[docs]</a>  <span class="k">def</span> <span class="nf">get_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get group for the provided group ID.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      group_id: Group ID for which group is to be determined.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Group corresponding to the provided group ID.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_id_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">group_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">group</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">group</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Group ID &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in datafile.&#39;</span> <span class="o">%</span> <span class="n">group_id</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidGroupException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_GROUP_ID_ERROR</span><span class="p">))</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_audience"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_audience">[docs]</a>  <span class="k">def</span> <span class="nf">get_audience</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">audience_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get audience object for the provided audience ID.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      audience_id: ID of the audience.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Dict representing the audience.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">audience</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">audience_id_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">audience_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">audience</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">audience</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Audience ID &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in datafile.&#39;</span> <span class="o">%</span> <span class="n">audience_id</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidAudienceException</span><span class="p">((</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_AUDIENCE_ERROR</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_variation_from_key"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_variation_from_key">[docs]</a>  <span class="k">def</span> <span class="nf">get_variation_from_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_key</span><span class="p">,</span> <span class="n">variation_key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get variation given experiment and variation key.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      experiment: Key representing parent experiment of variation.</span>
+<span class="sd">      variation_key: Key representing the variation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">      Object representing the variation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">variation_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variation_key_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">experiment_key</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">variation_map</span><span class="p">:</span>
+      <span class="n">variation</span> <span class="o">=</span> <span class="n">variation_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">variation_key</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">variation</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">variation</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Variation key &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in datafile.&#39;</span> <span class="o">%</span> <span class="n">variation_key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidVariationException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_VARIATION_ERROR</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Experiment key &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in datafile.&#39;</span> <span class="o">%</span> <span class="n">experiment_key</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidExperimentException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_EXPERIMENT_KEY_ERROR</span><span class="p">))</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_variation_from_id"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_variation_from_id">[docs]</a>  <span class="k">def</span> <span class="nf">get_variation_from_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_key</span><span class="p">,</span> <span class="n">variation_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get variation given experiment and variation ID.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      experiment: Key representing parent experiment of variation.</span>
+<span class="sd">      variation_id: ID representing the variation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">      Object representing the variation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">variation_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variation_id_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">experiment_key</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">variation_map</span><span class="p">:</span>
+      <span class="n">variation</span> <span class="o">=</span> <span class="n">variation_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">variation_id</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">variation</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">variation</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Variation ID &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in datafile.&#39;</span> <span class="o">%</span> <span class="n">variation_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidVariationException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_VARIATION_ERROR</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Experiment key &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in datafile.&#39;</span> <span class="o">%</span> <span class="n">experiment_key</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidExperimentException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_EXPERIMENT_KEY_ERROR</span><span class="p">))</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_event"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_event">[docs]</a>  <span class="k">def</span> <span class="nf">get_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get event for the provided event key.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_key: Event key for which event is to be determined.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Event corresponding to the provided event key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">event</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_key_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">event_key</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">event</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">event</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Event &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in datafile.&#39;</span> <span class="o">%</span> <span class="n">event_key</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidEventException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_EVENT_KEY_ERROR</span><span class="p">))</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_attribute"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_attribute">[docs]</a>  <span class="k">def</span> <span class="nf">get_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute_key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get attribute for the provided attribute key.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      attribute_key: Attribute key for which attribute is to be fetched.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Attribute corresponding to the provided attribute key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">attribute</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribute_key_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attribute_key</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">attribute</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">attribute</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Attribute &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in datafile.&#39;</span> <span class="o">%</span> <span class="n">attribute_key</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">error_handler</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidAttributeException</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">INVALID_ATTRIBUTE_ERROR</span><span class="p">))</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_feature_from_key"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_feature_from_key">[docs]</a>  <span class="k">def</span> <span class="nf">get_feature_from_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get feature for the provided feature key.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      feature_key: Feature key for which feature is to be fetched.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Feature corresponding to the provided feature key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">feature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_key_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">feature_key</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">feature</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">feature</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Feature &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in datafile.&#39;</span> <span class="o">%</span> <span class="n">feature_key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_rollout_from_id"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_rollout_from_id">[docs]</a>  <span class="k">def</span> <span class="nf">get_rollout_from_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rollout_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get rollout for the provided ID.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      rollout_id: ID of the rollout to be fetched.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Rollout corresponding to the provided ID.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rollout_id_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rollout_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">layer</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">layer</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Rollout with ID &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in datafile.&#39;</span> <span class="o">%</span> <span class="n">rollout_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_variable_value_for_variation"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_variable_value_for_variation">[docs]</a>  <span class="k">def</span> <span class="nf">get_variable_value_for_variation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">variation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get the variable value for the given variation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      variable: The Variable for which we are getting the value.</span>
+<span class="sd">      variation: The Variation for which we are getting the variable value.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The variable value or None if any of the inputs are invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">variable</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">variation</span><span class="p">:</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">variation</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variation_variable_usage_map</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Variation with ID &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in the datafile.&#39;</span> <span class="o">%</span> <span class="n">variation</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># Get all variable usages for the given variation</span>
+    <span class="n">variable_usages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variation_variable_usage_map</span><span class="p">[</span><span class="n">variation</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+
+    <span class="c1"># Find usage in given variation</span>
+    <span class="n">variable_usage</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">variable_usages</span><span class="p">:</span>
+      <span class="n">variable_usage</span> <span class="o">=</span> <span class="n">variable_usages</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">variable_usage</span><span class="p">:</span>
+      <span class="n">variable_value</span> <span class="o">=</span> <span class="n">variable_usage</span><span class="o">.</span><span class="n">value</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+        <span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+        <span class="s1">&#39;Value for variable &quot;</span><span class="si">%s</span><span class="s1">&quot; for variation &quot;</span><span class="si">%s</span><span class="s1">&quot; is &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+          <span class="n">variable</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">variation</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">variable_value</span>
+        <span class="p">))</span>
+
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">variable_value</span> <span class="o">=</span> <span class="n">variable</span><span class="o">.</span><span class="n">defaultValue</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+          <span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+          <span class="s1">&#39;Variable &quot;</span><span class="si">%s</span><span class="s1">&quot; is not used in variation &quot;</span><span class="si">%s</span><span class="s1">&quot;. Assinging default value &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">variable</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">variation</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">variable_value</span>
+          <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">variable_value</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_variable_for_feature"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_variable_for_feature">[docs]</a>  <span class="k">def</span> <span class="nf">get_variable_for_feature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_key</span><span class="p">,</span> <span class="n">variable_key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get the variable with the given variable key for the given feature.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      feature_key: The key of the feature for which we are getting the variable.</span>
+<span class="sd">      variable_key: The key of the variable we are getting.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      Variable with the given key in the given variation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">feature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_key_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">feature_key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">feature</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Feature with key &quot;</span><span class="si">%s</span><span class="s1">&quot; not found in the datafile.&#39;</span> <span class="o">%</span> <span class="n">feature_key</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">variable_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">feature</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Variable with key &quot;</span><span class="si">%s</span><span class="s1">&quot; not found in the datafile.&#39;</span> <span class="o">%</span> <span class="n">variable_key</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">feature</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">variable_key</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.set_forced_variation"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.set_forced_variation">[docs]</a>  <span class="k">def</span> <span class="nf">set_forced_variation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">variation_key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Sets users to a map of experiments to forced variations.</span>
+
+<span class="sd">      Args:</span>
+<span class="sd">        experiment_key: Key for experiment.</span>
+<span class="sd">        user_id: The user ID.</span>
+<span class="sd">        variation_key: Key for variation. If None, then clear the existing experiment-to-variation mapping.</span>
+
+<span class="sd">      Returns:</span>
+<span class="sd">        A boolean value that indicates if the set completed successfully.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">user_id</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span> <span class="s1">&#39;User ID is invalid.&#39;</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">experiment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_experiment_from_key</span><span class="p">(</span><span class="n">experiment_key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">experiment</span><span class="p">:</span>
+      <span class="c1"># The invalid experiment key will be logged inside this call.</span>
+      <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">experiment_id</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">id</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">variation_key</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forced_variation_map</span><span class="p">:</span>
+        <span class="n">experiment_to_variation_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forced_variation_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">experiment_id</span> <span class="ow">in</span> <span class="n">experiment_to_variation_map</span><span class="p">:</span>
+          <span class="k">del</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forced_variation_map</span><span class="p">[</span><span class="n">user_id</span><span class="p">][</span><span class="n">experiment_id</span><span class="p">])</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                          <span class="s1">&#39;Variation mapped to experiment &quot;</span><span class="si">%s</span><span class="s1">&quot; has been removed for user &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span>
+                          <span class="o">%</span> <span class="p">(</span><span class="n">experiment_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                          <span class="s1">&#39;Nothing to remove. Variation mapped to experiment &quot;</span><span class="si">%s</span><span class="s1">&quot; for user &quot;</span><span class="si">%s</span><span class="s1">&quot; does not exist.&#39;</span>
+                          <span class="o">%</span> <span class="p">(</span><span class="n">experiment_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">))</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                        <span class="s1">&#39;Nothing to remove. User &quot;</span><span class="si">%s</span><span class="s1">&quot; does not exist in the forced variation map.&#39;</span> <span class="o">%</span> <span class="n">user_id</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">forced_variation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_variation_from_key</span><span class="p">(</span><span class="n">experiment_key</span><span class="p">,</span> <span class="n">variation_key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">forced_variation</span><span class="p">:</span>
+      <span class="c1"># The invalid variation key will be logged inside this call.</span>
+      <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">variation_id</span> <span class="o">=</span> <span class="n">forced_variation</span><span class="o">.</span><span class="n">id</span>
+
+    <span class="k">if</span> <span class="n">user_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forced_variation_map</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">forced_variation_map</span><span class="p">[</span><span class="n">user_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">experiment_id</span><span class="p">:</span> <span class="n">variation_id</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">forced_variation_map</span><span class="p">[</span><span class="n">user_id</span><span class="p">][</span><span class="n">experiment_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">variation_id</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                    <span class="s1">&#39;Set variation &quot;</span><span class="si">%s</span><span class="s1">&quot; for experiment &quot;</span><span class="si">%s</span><span class="s1">&quot; and user &quot;</span><span class="si">%s</span><span class="s1">&quot; in the forced variation map.&#39;</span>
+                    <span class="o">%</span> <span class="p">(</span><span class="n">variation_id</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">))</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_forced_variation"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_forced_variation">[docs]</a>  <span class="k">def</span> <span class="nf">get_forced_variation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Gets the forced variation key for the given user and experiment.</span>
+
+<span class="sd">      Args:</span>
+<span class="sd">        experiment_key: Key for experiment.</span>
+<span class="sd">        user_id: The user ID.</span>
+
+<span class="sd">      Returns:</span>
+<span class="sd">        The variation which the given user and experiment should be forced into.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">user_id</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span> <span class="s1">&#39;User ID is invalid.&#39;</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">user_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forced_variation_map</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span> <span class="s1">&#39;User &quot;</span><span class="si">%s</span><span class="s1">&quot; is not in the forced variation map.&#39;</span> <span class="o">%</span> <span class="n">user_id</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">experiment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_experiment_from_key</span><span class="p">(</span><span class="n">experiment_key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">experiment</span><span class="p">:</span>
+      <span class="c1"># The invalid experiment key will be logged inside this call.</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">experiment_to_variation_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forced_variation_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">experiment_to_variation_map</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                      <span class="s1">&#39;No experiment &quot;</span><span class="si">%s</span><span class="s1">&quot; mapped to user &quot;</span><span class="si">%s</span><span class="s1">&quot; in the forced variation map.&#39;</span>
+                      <span class="o">%</span> <span class="p">(</span><span class="n">experiment_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">))</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">variation_id</span> <span class="o">=</span> <span class="n">experiment_to_variation_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">variation_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                      <span class="s1">&#39;No variation mapped to experiment &quot;</span><span class="si">%s</span><span class="s1">&quot; in the forced variation map.&#39;</span>
+                      <span class="o">%</span> <span class="n">experiment_key</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">variation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_variation_from_id</span><span class="p">(</span><span class="n">experiment_key</span><span class="p">,</span> <span class="n">variation_id</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                    <span class="s1">&#39;Variation &quot;</span><span class="si">%s</span><span class="s1">&quot; is mapped to experiment &quot;</span><span class="si">%s</span><span class="s1">&quot; and user &quot;</span><span class="si">%s</span><span class="s1">&quot; in the forced variation map&#39;</span>
+                    <span class="o">%</span> <span class="p">(</span><span class="n">variation</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">experiment_key</span><span class="p">,</span> <span class="n">user_id</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">variation</span></div>
+
+<div class="viewcode-block" id="ProjectConfig.get_anonymize_ip_value"><a class="viewcode-back" href="../../optimizely/optimizely.project_config.html#optimizely.project_config.ProjectConfig.get_anonymize_ip_value">[docs]</a>  <span class="k">def</span> <span class="nf">get_anonymize_ip_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Gets the anonymize IP value.</span>
+
+<span class="sd">      Returns:</span>
+<span class="sd">        A boolean value that indicates if the IP should be anonymized.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">anonymize_ip</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Optimizely.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

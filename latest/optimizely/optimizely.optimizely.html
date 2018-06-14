@@ -1,0 +1,268 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>optimizely.optimizely module &#8212; Optimizely Python SDK  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="optimizely.event_dispatcher module" href="optimizely.event_dispatcher.html" />
+    <link rel="prev" title="Welcome to Optimizely Python SDK’s documentation!" href="../index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-optimizely.optimizely">
+<span id="optimizely-optimizely-module"></span><h1>optimizely.optimizely module<a class="headerlink" href="#module-optimizely.optimizely" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="optimizely.optimizely.Optimizely">
+<em class="property">class </em><code class="descclassname">optimizely.optimizely.</code><code class="descname">Optimizely</code><span class="sig-paren">(</span><em>datafile</em>, <em>event_dispatcher=None</em>, <em>logger=None</em>, <em>error_handler=None</em>, <em>skip_json_validation=False</em>, <em>user_profile_service=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/optimizely.html#Optimizely"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.optimizely.Optimizely" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class encapsulating all SDK functionality.</p>
+<dl class="method">
+<dt id="optimizely.optimizely.Optimizely.activate">
+<code class="descname">activate</code><span class="sig-paren">(</span><em>experiment_key</em>, <em>user_id</em>, <em>attributes=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/optimizely.html#Optimizely.activate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.optimizely.Optimizely.activate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Buckets visitor and sends impression event to Optimizely.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>experiment_key: Experiment which needs to be activated.
+user_id: ID for user.
+attributes: Dict representing user attributes and values which need to be recorded.</dd>
+<dt>Returns:</dt>
+<dd>Variation key representing the variation the user will be bucketed in.
+None if user is not in experiment or if experiment is not Running.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.optimizely.Optimizely.get_enabled_features">
+<code class="descname">get_enabled_features</code><span class="sig-paren">(</span><em>user_id</em>, <em>attributes=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/optimizely.html#Optimizely.get_enabled_features"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.optimizely.Optimizely.get_enabled_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of features that are enabled for the user.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>user_id: ID for user.
+attributes: Dict representing user attributes.</dd>
+<dt>Returns:</dt>
+<dd>A list of the keys of the features that are enabled for the user.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.optimizely.Optimizely.get_feature_variable_boolean">
+<code class="descname">get_feature_variable_boolean</code><span class="sig-paren">(</span><em>feature_key</em>, <em>variable_key</em>, <em>user_id</em>, <em>attributes=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/optimizely.html#Optimizely.get_feature_variable_boolean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.optimizely.Optimizely.get_feature_variable_boolean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns value for a certain boolean variable attached to a feature flag.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>feature_key: Key of the feature whose variable’s value is being accessed.
+variable_key: Key of the variable whose value is to be accessed.
+user_id: ID for user.
+attributes: Dict representing user attributes.</dd>
+<dt>Returns:</dt>
+<dd>Boolean value of the variable. None if:
+- Feature key is invalid.
+- Variable key is invalid.
+- Mismatch with type of variable.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.optimizely.Optimizely.get_feature_variable_double">
+<code class="descname">get_feature_variable_double</code><span class="sig-paren">(</span><em>feature_key</em>, <em>variable_key</em>, <em>user_id</em>, <em>attributes=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/optimizely.html#Optimizely.get_feature_variable_double"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.optimizely.Optimizely.get_feature_variable_double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns value for a certain double variable attached to a feature flag.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>feature_key: Key of the feature whose variable’s value is being accessed.
+variable_key: Key of the variable whose value is to be accessed.
+user_id: ID for user.
+attributes: Dict representing user attributes.</dd>
+<dt>Returns:</dt>
+<dd>Double value of the variable. None if:
+- Feature key is invalid.
+- Variable key is invalid.
+- Mismatch with type of variable.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.optimizely.Optimizely.get_feature_variable_integer">
+<code class="descname">get_feature_variable_integer</code><span class="sig-paren">(</span><em>feature_key</em>, <em>variable_key</em>, <em>user_id</em>, <em>attributes=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/optimizely.html#Optimizely.get_feature_variable_integer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.optimizely.Optimizely.get_feature_variable_integer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns value for a certain integer variable attached to a feature flag.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>feature_key: Key of the feature whose variable’s value is being accessed.
+variable_key: Key of the variable whose value is to be accessed.
+user_id: ID for user.
+attributes: Dict representing user attributes.</dd>
+<dt>Returns:</dt>
+<dd>Integer value of the variable. None if:
+- Feature key is invalid.
+- Variable key is invalid.
+- Mismatch with type of variable.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.optimizely.Optimizely.get_feature_variable_string">
+<code class="descname">get_feature_variable_string</code><span class="sig-paren">(</span><em>feature_key</em>, <em>variable_key</em>, <em>user_id</em>, <em>attributes=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/optimizely.html#Optimizely.get_feature_variable_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.optimizely.Optimizely.get_feature_variable_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns value for a certain string variable attached to a feature.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>feature_key: Key of the feature whose variable’s value is being accessed.
+variable_key: Key of the variable whose value is to be accessed.
+user_id: ID for user.
+attributes: Dict representing user attributes.</dd>
+<dt>Returns:</dt>
+<dd>String value of the variable. None if:
+- Feature key is invalid.
+- Variable key is invalid.
+- Mismatch with type of variable.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.optimizely.Optimizely.get_forced_variation">
+<code class="descname">get_forced_variation</code><span class="sig-paren">(</span><em>experiment_key</em>, <em>user_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/optimizely.html#Optimizely.get_forced_variation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.optimizely.Optimizely.get_forced_variation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the forced variation for a given user and experiment.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>experiment_key: A string key identifying the experiment.
+user_id: The user ID.</dd>
+<dt>Returns:</dt>
+<dd>The forced variation key. None if no forced variation key.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.optimizely.Optimizely.get_variation">
+<code class="descname">get_variation</code><span class="sig-paren">(</span><em>experiment_key</em>, <em>user_id</em>, <em>attributes=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/optimizely.html#Optimizely.get_variation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.optimizely.Optimizely.get_variation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets variation where user will be bucketed.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>experiment_key: Experiment for which user variation needs to be determined.
+user_id: ID for user.
+attributes: Dict representing user attributes.</dd>
+<dt>Returns:</dt>
+<dd>Variation key representing the variation the user will be bucketed in.
+None if user is not in experiment or if experiment is not Running.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.optimizely.Optimizely.is_feature_enabled">
+<code class="descname">is_feature_enabled</code><span class="sig-paren">(</span><em>feature_key</em>, <em>user_id</em>, <em>attributes=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/optimizely.html#Optimizely.is_feature_enabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.optimizely.Optimizely.is_feature_enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the feature is enabled for the given user.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>feature_key: The key of the feature for which we are determining if it is enabled or not for the given user.
+user_id: ID for user.
+attributes: Dict representing user attributes.</dd>
+<dt>Returns:</dt>
+<dd>True if the feature is enabled for the user. False otherwise.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.optimizely.Optimizely.set_forced_variation">
+<code class="descname">set_forced_variation</code><span class="sig-paren">(</span><em>experiment_key</em>, <em>user_id</em>, <em>variation_key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/optimizely.html#Optimizely.set_forced_variation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.optimizely.Optimizely.set_forced_variation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Force a user into a variation for a given experiment.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>experiment_key: A string key identifying the experiment.
+user_id: The user ID.
+variation_key: A string variation key that specifies the variation which the user.
+will be forced into. If null, then clear the existing experiment-to-variation mapping.</dd>
+<dt>Returns:</dt>
+<dd>A boolean value that indicates if the set completed successfully.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.optimizely.Optimizely.track">
+<code class="descname">track</code><span class="sig-paren">(</span><em>event_key</em>, <em>user_id</em>, <em>attributes=None</em>, <em>event_tags=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/optimizely.html#Optimizely.track"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.optimizely.Optimizely.track" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send conversion event to Optimizely.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>event_key: Event key representing the event which needs to be recorded.
+user_id: ID for user.
+attributes: Dict representing visitor attributes and values which need to be recorded.
+event_tags: Dict representing metadata associated with the event.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../index.html" title="previous chapter">Welcome to Optimizely Python SDK’s documentation!</a></li>
+      <li>Next: <a href="optimizely.event_dispatcher.html" title="next chapter">optimizely.event_dispatcher module</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/optimizely/optimizely.optimizely.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Optimizely.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/optimizely/optimizely.optimizely.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

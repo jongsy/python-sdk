@@ -1,0 +1,7 @@
+optimizely.lib.pymmh3 module
+============================
+
+.. automodule:: optimizely.lib.pymmh3
+    :members:
+    :undoc-members:
+    :show-inheritance:

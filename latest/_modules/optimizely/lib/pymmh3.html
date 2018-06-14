@@ -1,0 +1,528 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>optimizely.lib.pymmh3 &#8212; Optimizely Python SDK  documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for optimizely.lib.pymmh3</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">pymmh3 was written by Fredrik Kihlander and enhanced by Swapnil Gusani, and is placed in the public</span>
+<span class="sd">domain. The authors hereby disclaim copyright to this source code.</span>
+
+<span class="sd">pure python implementation of the murmur3 hash algorithm</span>
+
+<span class="sd">https://code.google.com/p/smhasher/wiki/MurmurHash3</span>
+
+<span class="sd">This was written for the times when you do not want to compile c-code and install modules,</span>
+<span class="sd">and you only want a drop-in murmur3 implementation.</span>
+
+<span class="sd">As this is purely python it is FAR from performant and if performance is anything that is needed</span>
+<span class="sd">a proper c-module is suggested!</span>
+
+<span class="sd">This module is written to have the same format as mmh3 python package found here for simple conversions:</span>
+
+<span class="sd">https://pypi.python.org/pypi/mmh3/2.3.1</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span> <span class="k">as</span> <span class="nn">_sys</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">_sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+    <span class="k">def</span> <span class="nf">xrange</span><span class="p">(</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="p">):</span>
+        <span class="k">return</span> <span class="nb">range</span><span class="p">(</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">xencode</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">bytearray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">x</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+<span class="k">else</span><span class="p">:</span>
+<div class="viewcode-block" id="xencode"><a class="viewcode-back" href="../../../optimizely/optimizely.lib.pymmh3.html#optimizely.lib.pymmh3.xencode">[docs]</a>    <span class="k">def</span> <span class="nf">xencode</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+<span class="k">del</span> <span class="n">_sys</span>
+
+<div class="viewcode-block" id="hash"><a class="viewcode-back" href="../../../optimizely/optimizely.lib.pymmh3.html#optimizely.lib.pymmh3.hash">[docs]</a><span class="k">def</span> <span class="nf">hash</span><span class="p">(</span> <span class="n">key</span><span class="p">,</span> <span class="n">seed</span> <span class="o">=</span> <span class="mh">0x0</span> <span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; Implements 32bit murmur3 hash. &#39;&#39;&#39;</span>
+
+    <span class="n">key</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span> <span class="n">xencode</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fmix</span><span class="p">(</span> <span class="n">h</span> <span class="p">):</span>
+        <span class="n">h</span> <span class="o">^=</span> <span class="n">h</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span>
+        <span class="n">h</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">h</span> <span class="o">*</span> <span class="mh">0x85ebca6b</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">h</span> <span class="o">^=</span> <span class="n">h</span> <span class="o">&gt;&gt;</span> <span class="mi">13</span>
+        <span class="n">h</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">h</span> <span class="o">*</span> <span class="mh">0xc2b2ae35</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">h</span> <span class="o">^=</span> <span class="n">h</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span>
+        <span class="k">return</span> <span class="n">h</span>
+
+    <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span> <span class="n">key</span> <span class="p">)</span>
+    <span class="n">nblocks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">length</span> <span class="o">/</span> <span class="mi">4</span> <span class="p">)</span>
+
+    <span class="n">h1</span> <span class="o">=</span> <span class="n">seed</span>
+
+    <span class="n">c1</span> <span class="o">=</span> <span class="mh">0xcc9e2d51</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="mh">0x1b873593</span>
+
+    <span class="c1"># body</span>
+    <span class="k">for</span> <span class="n">block_start</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nblocks</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span> <span class="p">):</span>
+        <span class="c1"># ??? big endian?</span>
+        <span class="n">k1</span> <span class="o">=</span> <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">3</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span> <span class="o">|</span> \
+             <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">2</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span> <span class="o">|</span> \
+             <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">]</span> <span class="o">&lt;&lt;</span>  <span class="mi">8</span> <span class="o">|</span> \
+             <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">0</span> <span class="p">]</span>
+             
+        <span class="n">k1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">c1</span> <span class="o">*</span> <span class="n">k1</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">k1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">k1</span> <span class="o">&lt;&lt;</span> <span class="mi">15</span> <span class="o">|</span> <span class="n">k1</span> <span class="o">&gt;&gt;</span> <span class="mi">17</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+        <span class="n">k1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">c2</span> <span class="o">*</span> <span class="n">k1</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        
+        <span class="n">h1</span> <span class="o">^=</span> <span class="n">k1</span>
+        <span class="n">h1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">&lt;&lt;</span> <span class="mi">13</span> <span class="o">|</span> <span class="n">h1</span> <span class="o">&gt;&gt;</span> <span class="mi">19</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+        <span class="n">h1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">+</span> <span class="mh">0xe6546b64</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+
+    <span class="c1"># tail</span>
+    <span class="n">tail_index</span> <span class="o">=</span> <span class="n">nblocks</span> <span class="o">*</span> <span class="mi">4</span>
+    <span class="n">k1</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">tail_size</span> <span class="o">=</span> <span class="n">length</span> <span class="o">&amp;</span> <span class="mi">3</span>
+
+    <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">2</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span>
+    <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span>
+    <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">0</span> <span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">c1</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k1</span> <span class="o">&lt;&lt;</span> <span class="mi">15</span> <span class="o">|</span> <span class="n">k1</span> <span class="o">&gt;&gt;</span> <span class="mi">17</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+        <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">c2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">h1</span> <span class="o">^=</span> <span class="n">k1</span>
+
+    <span class="c1">#finalization</span>
+    <span class="n">unsigned_val</span> <span class="o">=</span> <span class="n">fmix</span><span class="p">(</span> <span class="n">h1</span> <span class="o">^</span> <span class="n">length</span> <span class="p">)</span>
+    <span class="k">if</span> <span class="n">unsigned_val</span> <span class="o">&amp;</span> <span class="mh">0x80000000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">unsigned_val</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="p">(</span> <span class="p">(</span><span class="n">unsigned_val</span> <span class="o">^</span> <span class="mh">0xFFFFFFFF</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="hash128"><a class="viewcode-back" href="../../../optimizely/optimizely.lib.pymmh3.html#optimizely.lib.pymmh3.hash128">[docs]</a><span class="k">def</span> <span class="nf">hash128</span><span class="p">(</span> <span class="n">key</span><span class="p">,</span> <span class="n">seed</span> <span class="o">=</span> <span class="mh">0x0</span><span class="p">,</span> <span class="n">x64arch</span> <span class="o">=</span> <span class="kc">True</span> <span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; Implements 128bit murmur3 hash. &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">hash128_x64</span><span class="p">(</span> <span class="n">key</span><span class="p">,</span> <span class="n">seed</span> <span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; Implements 128bit murmur3 hash for x64. &#39;&#39;&#39;</span>
+
+        <span class="k">def</span> <span class="nf">fmix</span><span class="p">(</span> <span class="n">k</span> <span class="p">):</span>
+            <span class="n">k</span> <span class="o">^=</span> <span class="n">k</span> <span class="o">&gt;&gt;</span> <span class="mi">33</span>
+            <span class="n">k</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k</span> <span class="o">*</span> <span class="mh">0xff51afd7ed558ccd</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+            <span class="n">k</span> <span class="o">^=</span> <span class="n">k</span> <span class="o">&gt;&gt;</span> <span class="mi">33</span>
+            <span class="n">k</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k</span> <span class="o">*</span> <span class="mh">0xc4ceb9fe1a85ec53</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+            <span class="n">k</span> <span class="o">^=</span> <span class="n">k</span> <span class="o">&gt;&gt;</span> <span class="mi">33</span>
+            <span class="k">return</span> <span class="n">k</span>
+
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span> <span class="n">key</span> <span class="p">)</span>
+        <span class="n">nblocks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">length</span> <span class="o">/</span> <span class="mi">16</span> <span class="p">)</span>
+
+        <span class="n">h1</span> <span class="o">=</span> <span class="n">seed</span>
+        <span class="n">h2</span> <span class="o">=</span> <span class="n">seed</span>
+
+        <span class="n">c1</span> <span class="o">=</span> <span class="mh">0x87c37b91114253d5</span>
+        <span class="n">c2</span> <span class="o">=</span> <span class="mh">0x4cf5ad432745937f</span>
+
+        <span class="c1">#body</span>
+        <span class="k">for</span> <span class="n">block_start</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nblocks</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span> <span class="p">):</span>
+            <span class="c1"># ??? big endian?</span>
+            <span class="n">k1</span> <span class="o">=</span> <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">7</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">56</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">6</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">48</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">5</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">40</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">4</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">3</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">2</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">]</span> <span class="o">&lt;&lt;</span>  <span class="mi">8</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">0</span> <span class="p">]</span>
+
+            <span class="n">k2</span> <span class="o">=</span> <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">15</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">56</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">14</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">48</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">13</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">40</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">12</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">11</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">10</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">9</span> <span class="p">]</span> <span class="o">&lt;&lt;</span>  <span class="mi">8</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">8</span> <span class="p">]</span>
+
+            <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">c1</span> <span class="o">*</span> <span class="n">k1</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+            <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k1</span> <span class="o">&lt;&lt;</span> <span class="mi">31</span> <span class="o">|</span> <span class="n">k1</span> <span class="o">&gt;&gt;</span> <span class="mi">33</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span> <span class="c1"># inlined ROTL64</span>
+            <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">c2</span> <span class="o">*</span> <span class="n">k1</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+            <span class="n">h1</span> <span class="o">^=</span> <span class="n">k1</span>
+
+            <span class="n">h1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">&lt;&lt;</span> <span class="mi">27</span> <span class="o">|</span> <span class="n">h1</span> <span class="o">&gt;&gt;</span> <span class="mi">37</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span> <span class="c1"># inlined ROTL64</span>
+            <span class="n">h1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+            <span class="n">h1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">+</span> <span class="mh">0x52dce729</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+
+            <span class="n">k2</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">c2</span> <span class="o">*</span> <span class="n">k2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+            <span class="n">k2</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k2</span> <span class="o">&lt;&lt;</span> <span class="mi">33</span> <span class="o">|</span> <span class="n">k2</span> <span class="o">&gt;&gt;</span> <span class="mi">31</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span> <span class="c1"># inlined ROTL64</span>
+            <span class="n">k2</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">c1</span> <span class="o">*</span> <span class="n">k2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+            <span class="n">h2</span> <span class="o">^=</span> <span class="n">k2</span>
+
+            <span class="n">h2</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h2</span> <span class="o">&lt;&lt;</span> <span class="mi">31</span> <span class="o">|</span> <span class="n">h2</span> <span class="o">&gt;&gt;</span> <span class="mi">33</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span> <span class="c1"># inlined ROTL64</span>
+            <span class="n">h2</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+            <span class="n">h2</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h2</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">+</span> <span class="mh">0x38495ab5</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+
+        <span class="c1">#tail</span>
+        <span class="n">tail_index</span> <span class="o">=</span> <span class="n">nblocks</span> <span class="o">*</span> <span class="mi">16</span>
+        <span class="n">k1</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">k2</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">tail_size</span> <span class="o">=</span> <span class="n">length</span> <span class="o">&amp;</span> <span class="mi">15</span>
+
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">15</span><span class="p">:</span>
+            <span class="n">k2</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">14</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">48</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">14</span><span class="p">:</span>
+            <span class="n">k2</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">13</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">40</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">13</span><span class="p">:</span>
+            <span class="n">k2</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">12</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">12</span><span class="p">:</span>
+            <span class="n">k2</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">11</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">11</span><span class="p">:</span>
+            <span class="n">k2</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">10</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="n">k2</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span>  <span class="mi">9</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span>  <span class="mi">9</span><span class="p">:</span>
+            <span class="n">k2</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span>  <span class="mi">8</span> <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="n">k2</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k2</span> <span class="o">*</span> <span class="n">c2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+            <span class="n">k2</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k2</span> <span class="o">&lt;&lt;</span> <span class="mi">33</span> <span class="o">|</span> <span class="n">k2</span> <span class="o">&gt;&gt;</span> <span class="mi">31</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span> <span class="c1"># inlined ROTL64</span>
+            <span class="n">k2</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k2</span> <span class="o">*</span> <span class="n">c1</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+            <span class="n">h2</span> <span class="o">^=</span> <span class="n">k2</span>
+
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span>  <span class="mi">8</span><span class="p">:</span>
+            <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span>  <span class="mi">7</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">56</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span>  <span class="mi">7</span><span class="p">:</span>
+            <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span>  <span class="mi">6</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">48</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span>  <span class="mi">6</span><span class="p">:</span>
+            <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span>  <span class="mi">5</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">40</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span>  <span class="mi">5</span><span class="p">:</span>
+            <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span>  <span class="mi">4</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span>  <span class="mi">4</span><span class="p">:</span>
+            <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span>  <span class="mi">3</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span>  <span class="mi">3</span><span class="p">:</span>
+            <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span>  <span class="mi">2</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span>  <span class="mi">2</span><span class="p">:</span>
+            <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span>  <span class="mi">1</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span>  <span class="mi">1</span><span class="p">:</span>
+            <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span>  <span class="mi">0</span> <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">c1</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+            <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k1</span> <span class="o">&lt;&lt;</span> <span class="mi">31</span> <span class="o">|</span> <span class="n">k1</span> <span class="o">&gt;&gt;</span> <span class="mi">33</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span> <span class="c1"># inlined ROTL64</span>
+            <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">c2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+            <span class="n">h1</span> <span class="o">^=</span> <span class="n">k1</span>
+
+        <span class="c1">#finalization</span>
+        <span class="n">h1</span> <span class="o">^=</span> <span class="n">length</span>
+        <span class="n">h2</span> <span class="o">^=</span> <span class="n">length</span>
+
+        <span class="n">h1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+        <span class="n">h2</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+
+        <span class="n">h1</span>  <span class="o">=</span> <span class="n">fmix</span><span class="p">(</span> <span class="n">h1</span> <span class="p">)</span>
+        <span class="n">h2</span>  <span class="o">=</span> <span class="n">fmix</span><span class="p">(</span> <span class="n">h2</span> <span class="p">)</span>
+
+        <span class="n">h1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+        <span class="n">h2</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+
+        <span class="k">return</span> <span class="p">(</span> <span class="n">h2</span> <span class="o">&lt;&lt;</span> <span class="mi">64</span> <span class="o">|</span> <span class="n">h1</span> <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">hash128_x86</span><span class="p">(</span> <span class="n">key</span><span class="p">,</span> <span class="n">seed</span> <span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; Implements 128bit murmur3 hash for x86. &#39;&#39;&#39;</span>
+
+        <span class="k">def</span> <span class="nf">fmix</span><span class="p">(</span> <span class="n">h</span> <span class="p">):</span>
+            <span class="n">h</span> <span class="o">^=</span> <span class="n">h</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span>
+            <span class="n">h</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">h</span> <span class="o">*</span> <span class="mh">0x85ebca6b</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">h</span> <span class="o">^=</span> <span class="n">h</span> <span class="o">&gt;&gt;</span> <span class="mi">13</span>
+            <span class="n">h</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">h</span> <span class="o">*</span> <span class="mh">0xc2b2ae35</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">h</span> <span class="o">^=</span> <span class="n">h</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span>
+            <span class="k">return</span> <span class="n">h</span>
+
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span> <span class="n">key</span> <span class="p">)</span>
+        <span class="n">nblocks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">length</span> <span class="o">/</span> <span class="mi">16</span> <span class="p">)</span>
+
+        <span class="n">h1</span> <span class="o">=</span> <span class="n">seed</span>
+        <span class="n">h2</span> <span class="o">=</span> <span class="n">seed</span>
+        <span class="n">h3</span> <span class="o">=</span> <span class="n">seed</span>
+        <span class="n">h4</span> <span class="o">=</span> <span class="n">seed</span>
+
+        <span class="n">c1</span> <span class="o">=</span> <span class="mh">0x239b961b</span>
+        <span class="n">c2</span> <span class="o">=</span> <span class="mh">0xab0e9789</span>
+        <span class="n">c3</span> <span class="o">=</span> <span class="mh">0x38b34ae5</span>
+        <span class="n">c4</span> <span class="o">=</span> <span class="mh">0xa1e38b93</span>
+
+        <span class="c1">#body</span>
+        <span class="k">for</span> <span class="n">block_start</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nblocks</span> <span class="o">*</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span> <span class="p">):</span>
+            <span class="n">k1</span> <span class="o">=</span> <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span>  <span class="mi">3</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span>  <span class="mi">2</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span>  <span class="mi">1</span> <span class="p">]</span> <span class="o">&lt;&lt;</span>  <span class="mi">8</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span>  <span class="mi">0</span> <span class="p">]</span>
+
+            <span class="n">k2</span> <span class="o">=</span> <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span>  <span class="mi">7</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span>  <span class="mi">6</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span>  <span class="mi">5</span> <span class="p">]</span> <span class="o">&lt;&lt;</span>  <span class="mi">8</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span>  <span class="mi">4</span> <span class="p">]</span>
+
+            <span class="n">k3</span> <span class="o">=</span> <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">11</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">10</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span>  <span class="mi">9</span> <span class="p">]</span> <span class="o">&lt;&lt;</span>  <span class="mi">8</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span>  <span class="mi">8</span> <span class="p">]</span>
+
+            <span class="n">k4</span> <span class="o">=</span> <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">15</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">14</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">13</span> <span class="p">]</span> <span class="o">&lt;&lt;</span>  <span class="mi">8</span> <span class="o">|</span> \
+                 <span class="n">key</span><span class="p">[</span> <span class="n">block_start</span> <span class="o">+</span> <span class="mi">12</span> <span class="p">]</span>
+
+            <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">c1</span> <span class="o">*</span> <span class="n">k1</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k1</span> <span class="o">&lt;&lt;</span> <span class="mi">15</span> <span class="o">|</span> <span class="n">k1</span> <span class="o">&gt;&gt;</span> <span class="mi">17</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+            <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">c2</span> <span class="o">*</span> <span class="n">k1</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">h1</span> <span class="o">^=</span> <span class="n">k1</span>
+
+            <span class="n">h1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">&lt;&lt;</span> <span class="mi">19</span> <span class="o">|</span> <span class="n">h1</span> <span class="o">&gt;&gt;</span> <span class="mi">13</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+            <span class="n">h1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">h1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">+</span> <span class="mh">0x561ccd1b</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+
+            <span class="n">k2</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">c2</span> <span class="o">*</span> <span class="n">k2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">k2</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k2</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span> <span class="o">|</span> <span class="n">k2</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+            <span class="n">k2</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">c3</span> <span class="o">*</span> <span class="n">k2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">h2</span> <span class="o">^=</span> <span class="n">k2</span>
+
+            <span class="n">h2</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h2</span> <span class="o">&lt;&lt;</span> <span class="mi">17</span> <span class="o">|</span> <span class="n">h2</span> <span class="o">&gt;&gt;</span> <span class="mi">15</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+            <span class="n">h2</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h2</span> <span class="o">+</span> <span class="n">h3</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">h2</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h2</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">+</span> <span class="mh">0x0bcaa747</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+
+            <span class="n">k3</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">c3</span> <span class="o">*</span> <span class="n">k3</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">k3</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k3</span> <span class="o">&lt;&lt;</span> <span class="mi">17</span> <span class="o">|</span> <span class="n">k3</span> <span class="o">&gt;&gt;</span> <span class="mi">15</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+            <span class="n">k3</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">c4</span> <span class="o">*</span> <span class="n">k3</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">h3</span> <span class="o">^=</span> <span class="n">k3</span>
+
+            <span class="n">h3</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h3</span> <span class="o">&lt;&lt;</span> <span class="mi">15</span> <span class="o">|</span> <span class="n">h3</span> <span class="o">&gt;&gt;</span> <span class="mi">17</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+            <span class="n">h3</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h3</span> <span class="o">+</span> <span class="n">h4</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">h3</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h3</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">+</span> <span class="mh">0x96cd1c35</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+
+            <span class="n">k4</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">c4</span> <span class="o">*</span> <span class="n">k4</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">k4</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k4</span> <span class="o">&lt;&lt;</span> <span class="mi">18</span> <span class="o">|</span> <span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">14</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+            <span class="n">k4</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">c1</span> <span class="o">*</span> <span class="n">k4</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">h4</span> <span class="o">^=</span> <span class="n">k4</span>
+
+            <span class="n">h4</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h4</span> <span class="o">&lt;&lt;</span> <span class="mi">13</span> <span class="o">|</span> <span class="n">h4</span> <span class="o">&gt;&gt;</span> <span class="mi">19</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+            <span class="n">h4</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h4</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">h4</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h4</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">+</span> <span class="mh">0x32ac3b17</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+
+        <span class="c1">#tail</span>
+        <span class="n">tail_index</span> <span class="o">=</span> <span class="n">nblocks</span> <span class="o">*</span> <span class="mi">16</span>
+        <span class="n">k1</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">k2</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">k3</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">k4</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">tail_size</span> <span class="o">=</span> <span class="n">length</span> <span class="o">&amp;</span> <span class="mi">15</span>
+
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">15</span><span class="p">:</span>
+            <span class="n">k4</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">14</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">14</span><span class="p">:</span>
+            <span class="n">k4</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">13</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">13</span><span class="p">:</span>
+            <span class="n">k4</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">12</span> <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;</span> <span class="mi">12</span><span class="p">:</span>
+            <span class="n">k4</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k4</span> <span class="o">*</span> <span class="n">c4</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">k4</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k4</span> <span class="o">&lt;&lt;</span> <span class="mi">18</span> <span class="o">|</span> <span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">14</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+            <span class="n">k4</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k4</span> <span class="o">*</span> <span class="n">c1</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">h4</span> <span class="o">^=</span> <span class="n">k4</span>
+
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">12</span><span class="p">:</span>
+            <span class="n">k3</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">11</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">11</span><span class="p">:</span>
+            <span class="n">k3</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">10</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="n">k3</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span>  <span class="mi">9</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span>  <span class="mi">9</span><span class="p">:</span>
+            <span class="n">k3</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span>  <span class="mi">8</span> <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="n">k3</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k3</span> <span class="o">*</span> <span class="n">c3</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">k3</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k3</span> <span class="o">&lt;&lt;</span> <span class="mi">17</span> <span class="o">|</span> <span class="n">k3</span> <span class="o">&gt;&gt;</span> <span class="mi">15</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+            <span class="n">k3</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k3</span> <span class="o">*</span> <span class="n">c4</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">h3</span> <span class="o">^=</span> <span class="n">k3</span>
+
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="n">k2</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">7</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">7</span><span class="p">:</span>
+            <span class="n">k2</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">6</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="n">k2</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">5</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="n">k2</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">4</span> <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">k2</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k2</span> <span class="o">*</span> <span class="n">c2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">k2</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k2</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span> <span class="o">|</span> <span class="n">k2</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+            <span class="n">k2</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k2</span> <span class="o">*</span> <span class="n">c3</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">h2</span> <span class="o">^=</span> <span class="n">k2</span>
+
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">3</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">2</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span>
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">k1</span> <span class="o">^=</span> <span class="n">key</span><span class="p">[</span> <span class="n">tail_index</span> <span class="o">+</span> <span class="mi">0</span> <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">tail_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">c1</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k1</span> <span class="o">&lt;&lt;</span> <span class="mi">15</span> <span class="o">|</span> <span class="n">k1</span> <span class="o">&gt;&gt;</span> <span class="mi">17</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span> <span class="c1"># inlined ROTL32</span>
+            <span class="n">k1</span>  <span class="o">=</span> <span class="p">(</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">c2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+            <span class="n">h1</span> <span class="o">^=</span> <span class="n">k1</span>
+
+        <span class="c1">#finalization</span>
+        <span class="n">h1</span> <span class="o">^=</span> <span class="n">length</span>
+        <span class="n">h2</span> <span class="o">^=</span> <span class="n">length</span>
+        <span class="n">h3</span> <span class="o">^=</span> <span class="n">length</span>
+        <span class="n">h4</span> <span class="o">^=</span> <span class="n">length</span>
+
+        <span class="n">h1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">h1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h3</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">h1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h4</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">h2</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">h3</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h3</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">h4</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h4</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+
+        <span class="n">h1</span> <span class="o">=</span> <span class="n">fmix</span><span class="p">(</span> <span class="n">h1</span> <span class="p">)</span>
+        <span class="n">h2</span> <span class="o">=</span> <span class="n">fmix</span><span class="p">(</span> <span class="n">h2</span> <span class="p">)</span>
+        <span class="n">h3</span> <span class="o">=</span> <span class="n">fmix</span><span class="p">(</span> <span class="n">h3</span> <span class="p">)</span>
+        <span class="n">h4</span> <span class="o">=</span> <span class="n">fmix</span><span class="p">(</span> <span class="n">h4</span> <span class="p">)</span>
+
+        <span class="n">h1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">h1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h3</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">h1</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h4</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">h2</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h2</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">h3</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h3</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+        <span class="n">h4</span> <span class="o">=</span> <span class="p">(</span> <span class="n">h1</span> <span class="o">+</span> <span class="n">h4</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span>
+
+        <span class="k">return</span> <span class="p">(</span> <span class="n">h4</span> <span class="o">&lt;&lt;</span> <span class="mi">96</span> <span class="o">|</span> <span class="n">h3</span> <span class="o">&lt;&lt;</span> <span class="mi">64</span> <span class="o">|</span> <span class="n">h2</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span> <span class="o">|</span> <span class="n">h1</span> <span class="p">)</span>
+
+    <span class="n">key</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span> <span class="n">xencode</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">x64arch</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">hash128_x64</span><span class="p">(</span> <span class="n">key</span><span class="p">,</span> <span class="n">seed</span> <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">hash128_x86</span><span class="p">(</span> <span class="n">key</span><span class="p">,</span> <span class="n">seed</span> <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="hash64"><a class="viewcode-back" href="../../../optimizely/optimizely.lib.pymmh3.html#optimizely.lib.pymmh3.hash64">[docs]</a><span class="k">def</span> <span class="nf">hash64</span><span class="p">(</span> <span class="n">key</span><span class="p">,</span> <span class="n">seed</span> <span class="o">=</span> <span class="mh">0x0</span><span class="p">,</span> <span class="n">x64arch</span> <span class="o">=</span> <span class="kc">True</span> <span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; Implements 64bit murmur3 hash. Returns a tuple. &#39;&#39;&#39;</span>
+
+    <span class="n">hash_128</span> <span class="o">=</span> <span class="n">hash128</span><span class="p">(</span> <span class="n">key</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">x64arch</span> <span class="p">)</span>
+
+    <span class="n">unsigned_val1</span> <span class="o">=</span> <span class="n">hash_128</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+    <span class="k">if</span> <span class="n">unsigned_val1</span> <span class="o">&amp;</span> <span class="mh">0x8000000000000000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">signed_val1</span> <span class="o">=</span> <span class="n">unsigned_val1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">signed_val1</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span> <span class="p">(</span><span class="n">unsigned_val1</span> <span class="o">^</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span>
+
+    <span class="n">unsigned_val2</span> <span class="o">=</span> <span class="p">(</span> <span class="n">hash_128</span> <span class="o">&gt;&gt;</span> <span class="mi">64</span> <span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span>
+    <span class="k">if</span> <span class="n">unsigned_val2</span> <span class="o">&amp;</span> <span class="mh">0x8000000000000000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">signed_val2</span> <span class="o">=</span> <span class="n">unsigned_val2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">signed_val2</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span> <span class="p">(</span><span class="n">unsigned_val2</span> <span class="o">^</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span> <span class="nb">int</span><span class="p">(</span> <span class="n">signed_val1</span> <span class="p">),</span> <span class="nb">int</span><span class="p">(</span> <span class="n">signed_val2</span> <span class="p">)</span> <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="hash_bytes"><a class="viewcode-back" href="../../../optimizely/optimizely.lib.pymmh3.html#optimizely.lib.pymmh3.hash_bytes">[docs]</a><span class="k">def</span> <span class="nf">hash_bytes</span><span class="p">(</span> <span class="n">key</span><span class="p">,</span> <span class="n">seed</span> <span class="o">=</span> <span class="mh">0x0</span><span class="p">,</span> <span class="n">x64arch</span> <span class="o">=</span> <span class="kc">True</span> <span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; Implements 128bit murmur3 hash. Returns a byte string. &#39;&#39;&#39;</span>
+
+    <span class="n">hash_128</span> <span class="o">=</span> <span class="n">hash128</span><span class="p">(</span> <span class="n">key</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">x64arch</span> <span class="p">)</span>
+
+    <span class="n">bytestring</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">lsbyte</span> <span class="o">=</span> <span class="n">hash_128</span> <span class="o">&amp;</span> <span class="mh">0xFF</span>
+        <span class="n">bytestring</span> <span class="o">=</span> <span class="n">bytestring</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span> <span class="nb">chr</span><span class="p">(</span> <span class="n">lsbyte</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="n">hash_128</span> <span class="o">=</span> <span class="n">hash_128</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span>
+
+    <span class="k">return</span> <span class="n">bytestring</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">argparse</span>
+    
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span> <span class="s1">&#39;pymurmur3&#39;</span><span class="p">,</span> <span class="s1">&#39;pymurmur [options] &quot;string to hash&quot;&#39;</span> <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span> <span class="s1">&#39;--seed&#39;</span><span class="p">,</span> <span class="nb">type</span> <span class="o">=</span> <span class="nb">int</span><span class="p">,</span> <span class="n">default</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span> <span class="s1">&#39;strings&#39;</span><span class="p">,</span> <span class="n">default</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+    
+    <span class="n">opts</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    
+    <span class="k">for</span> <span class="n">str_to_hash</span> <span class="ow">in</span> <span class="n">opts</span><span class="o">.</span><span class="n">strings</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span> <span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="s1">&quot; = 0x</span><span class="si">%08X</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span> <span class="n">str_to_hash</span><span class="p">,</span> <span class="nb">hash</span><span class="p">(</span> <span class="n">str_to_hash</span> <span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Optimizely.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

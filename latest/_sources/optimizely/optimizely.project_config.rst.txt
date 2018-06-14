@@ -1,0 +1,7 @@
+optimizely.project\_config module
+=================================
+
+.. automodule:: optimizely.project_config
+    :members:
+    :undoc-members:
+    :show-inheritance:

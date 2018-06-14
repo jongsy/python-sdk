@@ -1,0 +1,7 @@
+optimizely.logger module
+========================
+
+.. automodule:: optimizely.logger
+    :members:
+    :undoc-members:
+    :show-inheritance:

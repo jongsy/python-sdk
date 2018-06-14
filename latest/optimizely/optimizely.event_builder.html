@@ -1,0 +1,271 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>optimizely.event_builder module &#8212; Optimizely Python SDK  documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Optimizely Python SDK  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-optimizely.event_builder">
+<span id="optimizely-event-builder-module"></span><h1>optimizely.event_builder module<a class="headerlink" href="#module-optimizely.event_builder" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="optimizely.event_builder.BaseEventBuilder">
+<em class="property">class </em><code class="descclassname">optimizely.event_builder.</code><code class="descname">BaseEventBuilder</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/event_builder.html#BaseEventBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.event_builder.BaseEventBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class which encapsulates methods to build events for tracking impressions and conversions.</p>
+<dl class="attribute">
+<dt id="optimizely.event_builder.BaseEventBuilder.EventParams">
+<code class="descname">EventParams</code><a class="headerlink" href="#optimizely.event_builder.BaseEventBuilder.EventParams" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="optimizely.event_builder.Event">
+<em class="property">class </em><code class="descclassname">optimizely.event_builder.</code><code class="descname">Event</code><span class="sig-paren">(</span><em>url</em>, <em>params</em>, <em>http_verb=None</em>, <em>headers=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/event_builder.html#Event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.event_builder.Event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Representation of an event which can be sent to the Optimizely logging endpoint.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="optimizely.event_builder.EventBuilder">
+<em class="property">class </em><code class="descclassname">optimizely.event_builder.</code><code class="descname">EventBuilder</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/event_builder.html#EventBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.event_builder.EventBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#optimizely.event_builder.BaseEventBuilder" title="optimizely.event_builder.BaseEventBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">optimizely.event_builder.BaseEventBuilder</span></code></a></p>
+<p>Class which encapsulates methods to build events for tracking
+impressions and conversions using the new V3 event API (batch).</p>
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EVENTS_URL">
+<code class="descname">EVENTS_URL</code><em class="property"> = 'https://logx.optimizely.com/v1/events'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EVENTS_URL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="optimizely.event_builder.EventBuilder.EventParams">
+<em class="property">class </em><code class="descname">EventParams</code><a class="reference internal" href="../_modules/optimizely/event_builder.html#EventBuilder.EventParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.ACCOUNT_ID">
+<code class="descname">ACCOUNT_ID</code><em class="property"> = 'account_id'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.ACCOUNT_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.ANONYMIZE_IP">
+<code class="descname">ANONYMIZE_IP</code><em class="property"> = 'anonymize_ip'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.ANONYMIZE_IP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.ATTRIBUTES">
+<code class="descname">ATTRIBUTES</code><em class="property"> = 'attributes'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.ATTRIBUTES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.CAMPAIGN_ID">
+<code class="descname">CAMPAIGN_ID</code><em class="property"> = 'campaign_id'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.CAMPAIGN_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.CUSTOM">
+<code class="descname">CUSTOM</code><em class="property"> = 'custom'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.CUSTOM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.DECISIONS">
+<code class="descname">DECISIONS</code><em class="property"> = 'decisions'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.DECISIONS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.END_USER_ID">
+<code class="descname">END_USER_ID</code><em class="property"> = 'visitor_id'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.END_USER_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.EVENTS">
+<code class="descname">EVENTS</code><em class="property"> = 'events'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.EVENTS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.EVENT_ID">
+<code class="descname">EVENT_ID</code><em class="property"> = 'entity_id'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.EVENT_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.EXPERIMENT_ID">
+<code class="descname">EXPERIMENT_ID</code><em class="property"> = 'experiment_id'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.EXPERIMENT_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.KEY">
+<code class="descname">KEY</code><em class="property"> = 'key'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.KEY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.PROJECT_ID">
+<code class="descname">PROJECT_ID</code><em class="property"> = 'project_id'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.PROJECT_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.REVISION">
+<code class="descname">REVISION</code><em class="property"> = 'revision'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.REVISION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.SNAPSHOTS">
+<code class="descname">SNAPSHOTS</code><em class="property"> = 'snapshots'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.SNAPSHOTS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.SOURCE_SDK_TYPE">
+<code class="descname">SOURCE_SDK_TYPE</code><em class="property"> = 'client_name'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.SOURCE_SDK_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.SOURCE_SDK_VERSION">
+<code class="descname">SOURCE_SDK_VERSION</code><em class="property"> = 'client_version'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.SOURCE_SDK_VERSION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.TAGS">
+<code class="descname">TAGS</code><em class="property"> = 'tags'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.TAGS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.TIME">
+<code class="descname">TIME</code><em class="property"> = 'timestamp'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.TIME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.USERS">
+<code class="descname">USERS</code><em class="property"> = 'visitors'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.USERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.UUID">
+<code class="descname">UUID</code><em class="property"> = 'uuid'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.UUID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.EventParams.VARIATION_ID">
+<code class="descname">VARIATION_ID</code><em class="property"> = 'variation_id'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.EventParams.VARIATION_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.HTTP_HEADERS">
+<code class="descname">HTTP_HEADERS</code><em class="property"> = {'Content-Type': 'application/json'}</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.HTTP_HEADERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="optimizely.event_builder.EventBuilder.HTTP_VERB">
+<code class="descname">HTTP_VERB</code><em class="property"> = 'POST'</em><a class="headerlink" href="#optimizely.event_builder.EventBuilder.HTTP_VERB" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="optimizely.event_builder.EventBuilder.create_conversion_event">
+<code class="descname">create_conversion_event</code><span class="sig-paren">(</span><em>event_key</em>, <em>user_id</em>, <em>attributes</em>, <em>event_tags</em>, <em>decisions</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/event_builder.html#EventBuilder.create_conversion_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.event_builder.EventBuilder.create_conversion_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create conversion Event to be sent to the logging endpoint.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>event_key: Key representing the event which needs to be recorded.
+user_id: ID for user.
+attributes: Dict representing user attributes and values.
+event_tags: Dict representing metadata associated with the event.
+decisions: List of tuples representing experiments IDs and variation IDs.</dd>
+<dt>Returns:</dt>
+<dd>Event object encapsulating the conversion event.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimizely.event_builder.EventBuilder.create_impression_event">
+<code class="descname">create_impression_event</code><span class="sig-paren">(</span><em>experiment</em>, <em>variation_id</em>, <em>user_id</em>, <em>attributes</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/optimizely/event_builder.html#EventBuilder.create_impression_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimizely.event_builder.EventBuilder.create_impression_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create impression Event to be sent to the logging endpoint.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>experiment: Experiment for which impression needs to be recorded.
+variation_id: ID for variation which would be presented to user.
+user_id: ID for user.
+attributes: Dict representing user attributes and values which need to be recorded.</dd>
+<dt>Returns:</dt>
+<dd>Event object encapsulating the impression event.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/optimizely/optimizely.event_builder.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Optimizely Python SDK  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Optimizely.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,200 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>optimizely.helpers.event_tag_utils &#8212; Optimizely Python SDK  documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for optimizely.helpers.event_tag_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2017, Optimizely</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1"># http://www.apache.org/licenses/LICENSE-2.0</span>
+
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">enums</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">numbers</span>
+
+<span class="n">REVENUE_METRIC_TYPE</span> <span class="o">=</span> <span class="s1">&#39;revenue&#39;</span>
+<span class="n">NUMERIC_METRIC_TYPE</span> <span class="o">=</span> <span class="s1">&#39;value&#39;</span>
+
+
+<div class="viewcode-block" id="get_revenue_value"><a class="viewcode-back" href="../../../optimizely/optimizely.helpers.event_tag_utils.html#optimizely.helpers.event_tag_utils.get_revenue_value">[docs]</a><span class="k">def</span> <span class="nf">get_revenue_value</span><span class="p">(</span><span class="n">event_tags</span><span class="p">):</span>
+  <span class="k">if</span> <span class="n">event_tags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+  <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event_tags</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+  <span class="k">if</span> <span class="n">REVENUE_METRIC_TYPE</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">event_tags</span><span class="p">:</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+  <span class="n">raw_value</span> <span class="o">=</span> <span class="n">event_tags</span><span class="p">[</span><span class="n">REVENUE_METRIC_TYPE</span><span class="p">]</span>
+
+  <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+  <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Integral</span><span class="p">):</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+  <span class="k">return</span> <span class="n">raw_value</span></div>
+
+
+<div class="viewcode-block" id="get_numeric_value"><a class="viewcode-back" href="../../../optimizely/optimizely.helpers.event_tag_utils.html#optimizely.helpers.event_tag_utils.get_numeric_value">[docs]</a><span class="k">def</span> <span class="nf">get_numeric_value</span><span class="p">(</span><span class="n">event_tags</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  A smart getter of the numeric value from the event tags.</span>
+
+<span class="sd">  Args:</span>
+<span class="sd">      event_tags: A dictionary of event tags.</span>
+<span class="sd">      logger: Optional logger.</span>
+
+<span class="sd">  Returns:</span>
+<span class="sd">      A float numeric metric value is returned when the provided numeric</span>
+<span class="sd">      metric value is in the following format:</span>
+<span class="sd">          - A string (properly formatted, e.g., no commas)</span>
+<span class="sd">          - An integer</span>
+<span class="sd">          - A float or double</span>
+<span class="sd">      None is returned when the provided numeric metric values is in</span>
+<span class="sd">      the following format:</span>
+<span class="sd">          - None</span>
+<span class="sd">          - A boolean</span>
+<span class="sd">          - inf, -inf, nan</span>
+<span class="sd">          - A string not properly formatted (e.g., &#39;1,234&#39;)</span>
+<span class="sd">          - Any values that cannot be cast to a float (e.g., an array or dictionary)</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">logger_message_debug</span> <span class="o">=</span> <span class="kc">None</span>
+  <span class="n">numeric_metric_value</span> <span class="o">=</span> <span class="kc">None</span>
+
+  <span class="k">if</span> <span class="n">event_tags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">logger_message_debug</span> <span class="o">=</span> <span class="s1">&#39;Event tags is undefined.&#39;</span>
+  <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event_tags</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="n">logger_message_debug</span> <span class="o">=</span> <span class="s1">&#39;Event tags is not a dictionary.&#39;</span>
+  <span class="k">elif</span> <span class="n">NUMERIC_METRIC_TYPE</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">event_tags</span><span class="p">:</span>
+    <span class="n">logger_message_debug</span> <span class="o">=</span> <span class="s1">&#39;The numeric metric key is not in event tags.&#39;</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="n">numeric_metric_value</span> <span class="o">=</span> <span class="n">event_tags</span><span class="p">[</span><span class="n">NUMERIC_METRIC_TYPE</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">numeric_metric_value</span><span class="p">,</span> <span class="p">(</span><span class="n">numbers</span><span class="o">.</span><span class="n">Integral</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+        <span class="c1"># Attempt to convert the numeric metric value to a float</span>
+        <span class="c1"># (if it isn&#39;t already a float).</span>
+        <span class="n">cast_numeric_metric_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">numeric_metric_value</span><span class="p">)</span>
+
+        <span class="c1"># If not a float after casting, then make everything else a None.</span>
+        <span class="c1"># Other potential values are nan, inf, and -inf.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cast_numeric_metric_value</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> \
+              <span class="ow">or</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">cast_numeric_metric_value</span><span class="p">)</span> \
+              <span class="ow">or</span> <span class="n">math</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">cast_numeric_metric_value</span><span class="p">):</span>
+          <span class="n">logger_message_debug</span> <span class="o">=</span> <span class="s1">&#39;Provided numeric value </span><span class="si">{}</span><span class="s1"> is in an invalid format.&#39;</span>\
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">numeric_metric_value</span><span class="p">)</span>
+          <span class="n">numeric_metric_value</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="c1"># Handle booleans as a special case.</span>
+          <span class="c1"># They are treated like an integer in the cast, but we do not want to cast this.</span>
+         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">numeric_metric_value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="n">logger_message_debug</span> <span class="o">=</span> <span class="s1">&#39;Provided numeric value is a boolean, which is an invalid format.&#39;</span>
+            <span class="n">numeric_metric_value</span> <span class="o">=</span> <span class="kc">None</span>
+         <span class="k">else</span><span class="p">:</span>
+           <span class="n">numeric_metric_value</span> <span class="o">=</span> <span class="n">cast_numeric_metric_value</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger_message_debug</span> <span class="o">=</span> <span class="s1">&#39;Numeric metric value is not in integer, float, or string form.&#39;</span>
+        <span class="n">numeric_metric_value</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+      <span class="n">logger_message_debug</span> <span class="o">=</span> <span class="s1">&#39;Value error while casting numeric metric value to a float.&#39;</span>
+      <span class="n">numeric_metric_value</span> <span class="o">=</span> <span class="kc">None</span>
+
+  <span class="c1"># Log all potential debug messages while converting the numeric value to a float.</span>
+  <span class="k">if</span> <span class="n">logger</span> <span class="ow">and</span> <span class="n">logger_message_debug</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span> <span class="n">logger_message_debug</span><span class="p">)</span>
+
+  <span class="c1"># Log the final numeric metric value</span>
+  <span class="k">if</span> <span class="n">numeric_metric_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+      <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                 <span class="s1">&#39;The numeric metric value </span><span class="si">{}</span><span class="s1"> will be sent to results.&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">numeric_metric_value</span><span class="p">))</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+      <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">enums</span><span class="o">.</span><span class="n">LogLevels</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+                 <span class="s1">&#39;The provided numeric metric value </span><span class="si">{}</span><span class="s1"> is in an invalid format and will not be sent to results.&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">numeric_metric_value</span><span class="p">))</span>
+
+  <span class="k">return</span> <span class="n">numeric_metric_value</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Optimizely.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

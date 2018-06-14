@@ -1,0 +1,26 @@
+optimizely package
+==================
+
+.. automodule:: optimizely
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+
+Submodules
+----------
+
+.. toctree::
+
+   optimizely.error_handler
+   optimizely.event_dispatcher
+   optimizely.exceptions
+   optimizely.logger
+   optimizely.optimizely
+   optimizely.user_profile
+

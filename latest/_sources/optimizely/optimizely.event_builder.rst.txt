@@ -1,0 +1,7 @@
+optimizely.event\_builder module
+================================
+
+.. automodule:: optimizely.event_builder
+    :members:
+    :undoc-members:
+    :show-inheritance:

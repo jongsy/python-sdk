@@ -1,0 +1,7 @@
+optimizely.helpers.experiment module
+====================================
+
+.. automodule:: optimizely.helpers.experiment
+    :members:
+    :undoc-members:
+    :show-inheritance:
