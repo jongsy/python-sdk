@@ -258,6 +258,7 @@ class Optimizely(object):
       None if user is not in experiment or if experiment is not Running.
     """
 
+    return '1'
     if not self.is_valid:
       self.logger.error(enums.Errors.INVALID_DATAFILE.format('activate'))
       return None
